@@ -53,6 +53,11 @@ export function HowToView() {
           points completed per hour tracked. Pick a specific board from the dropdown to see its category
           breakdowns; late tasks and effectiveness are also available across all boards combined.
         </p>
+        <p className="mt-2">
+          <strong>Download logs</strong> exports a CSV activity log of everything that's happened across your
+          tasks — created, updated, status changes, moves, timer events, and deletions — with a timestamp for
+          each entry.
+        </p>
       </section>
 
       <section className="mb-6">

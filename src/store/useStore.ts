@@ -1,10 +1,14 @@
 import { create } from 'zustand'
 import * as repo from '../db/repository'
 import { buildExportFile, downloadExportFile } from '../db/exportImport'
+import { logActivity, downloadActivityLogCsv } from '../db/activityLog'
 import { createDebouncer } from './persist'
 import type { Board, Bucket, TaskCard, Category } from '../types'
 
-const debouncedPutTask = createDebouncer(repo.putTask, 450)
+const debouncedPutTask = createDebouncer((task: TaskCard) => {
+  repo.putTask(task)
+  logActivity(task.id, task.name, 'update')
+}, 450)
 const debouncedPutBoard = createDebouncer(repo.putBoard, 450)
 const debouncedPutBucket = createDebouncer(repo.putBucket, 450)
 const debouncedPutCategory = createDebouncer(repo.putCategory, 450)
@@ -44,6 +48,7 @@ interface AppState {
   deleteCategory: (id: string) => void
 
   exportData: () => Promise<void>
+  downloadActivityLog: () => Promise<void>
 }
 
 export const useStore = create<AppState>((set, get) => ({
@@ -86,6 +91,7 @@ export const useStore = create<AppState>((set, get) => ({
     debouncedPutBoard(id, () => get().boards[id])
   },
   deleteBoard: (id) => {
+    const affectedTasks = Object.values(get().tasks).filter((t) => t.boardId === id)
     set((state) => {
       const boards = { ...state.boards }
       delete boards[id]
@@ -95,6 +101,7 @@ export const useStore = create<AppState>((set, get) => ({
       return { boards, buckets, tasks, categories }
     })
     repo.deleteBoardCascade(id)
+    for (const t of affectedTasks) logActivity(t.id, t.name, 'delete')
   },
 
   addBucket: (boardId, name) => {
@@ -114,6 +121,7 @@ export const useStore = create<AppState>((set, get) => ({
     debouncedPutBucket(id, () => get().buckets[id])
   },
   deleteBucket: (id) => {
+    const affectedTasks = Object.values(get().tasks).filter((t) => t.bucketId === id)
     set((state) => {
       const buckets = { ...state.buckets }
       delete buckets[id]
@@ -121,6 +129,7 @@ export const useStore = create<AppState>((set, get) => ({
       return { buckets, tasks }
     })
     repo.deleteBucketCascade(id)
+    for (const t of affectedTasks) logActivity(t.id, t.name, 'delete')
   },
 
   addTask: (boardId, bucketId, name) => {
@@ -146,6 +155,7 @@ export const useStore = create<AppState>((set, get) => ({
     }
     set((state) => ({ tasks: { ...state.tasks, [id]: task } }))
     repo.putTask(task)
+    logActivity(id, name, 'create')
     return id
   },
   updateTask: (id, patch) => {
@@ -158,16 +168,21 @@ export const useStore = create<AppState>((set, get) => ({
       debouncedPutTask(id, () => get().tasks[id])
     } else {
       const updated = get().tasks[id]
-      if (updated) repo.putTask(updated)
+      if (updated) {
+        repo.putTask(updated)
+        logActivity(id, updated.name, 'status' in patch ? 'status-change' : 'update')
+      }
     }
   },
   deleteTask: (id) => {
+    const taskName = get().tasks[id]?.name
     set((state) => {
       const tasks = { ...state.tasks }
       delete tasks[id]
       return { tasks }
     })
     repo.deleteTask(id)
+    if (taskName != null) logActivity(id, taskName, 'delete')
   },
   moveTask: (taskId, toBucketId, toIndex) => {
     const state = get()
@@ -203,6 +218,7 @@ export const useStore = create<AppState>((set, get) => ({
         set((s) => ({ tasks: { ...s.tasks, ...resequenced } }))
         Object.values(resequenced).forEach((t) => repo.putTask(t))
       }
+      logActivity(taskId, task.name, 'move')
     }
   },
   moveTaskToBoard: (taskId, newBoardId) => {
@@ -217,6 +233,7 @@ export const useStore = create<AppState>((set, get) => ({
     const updated: TaskCard = { ...task, boardId: newBoardId, bucketId: newBucketId, categoryId: null, order }
     set((state) => ({ tasks: { ...state.tasks, [taskId]: updated } }))
     repo.putTask(updated)
+    logActivity(taskId, task.name, 'move')
   },
 
   startTimer: (taskId) => {
@@ -229,6 +246,7 @@ export const useStore = create<AppState>((set, get) => ({
     }
     set((state) => ({ tasks: { ...state.tasks, [taskId]: updated } }))
     repo.putTask(updated)
+    logActivity(taskId, task.name, 'timer-start')
   },
   pauseTimer: (taskId) => {
     const task = get().tasks[taskId]
@@ -237,6 +255,7 @@ export const useStore = create<AppState>((set, get) => ({
     const updated: TaskCard = { ...task, timer: { isRunning: false, elapsedSeconds, startedAt: null } }
     set((state) => ({ tasks: { ...state.tasks, [taskId]: updated } }))
     repo.putTask(updated)
+    logActivity(taskId, task.name, 'timer-pause')
   },
   resetTimer: (taskId) => {
     const task = get().tasks[taskId]
@@ -244,6 +263,7 @@ export const useStore = create<AppState>((set, get) => ({
     const updated: TaskCard = { ...task, timer: { isRunning: false, elapsedSeconds: 0, startedAt: null } }
     set((state) => ({ tasks: { ...state.tasks, [taskId]: updated } }))
     repo.putTask(updated)
+    logActivity(taskId, task.name, 'timer-reset')
   },
 
   completeTask: (taskId) => {
@@ -257,6 +277,7 @@ export const useStore = create<AppState>((set, get) => ({
     const updated: TaskCard = { ...task, status: 'completed', completedAt: Date.now(), timer }
     set((state) => ({ tasks: { ...state.tasks, [taskId]: updated } }))
     repo.putTask(updated)
+    logActivity(taskId, task.name, 'status-change')
   },
   uncompleteTask: (taskId) => {
     const task = get().tasks[taskId]
@@ -264,6 +285,7 @@ export const useStore = create<AppState>((set, get) => ({
     const updated: TaskCard = { ...task, status: 'not-started', completedAt: null }
     set((state) => ({ tasks: { ...state.tasks, [taskId]: updated } }))
     repo.putTask(updated)
+    logActivity(taskId, task.name, 'status-change')
   },
 
   addCategory: (boardId, name, color) => {
@@ -311,5 +333,8 @@ export const useStore = create<AppState>((set, get) => ({
   exportData: async () => {
     const data = await buildExportFile()
     downloadExportFile(data)
+  },
+  downloadActivityLog: async () => {
+    await downloadActivityLogCsv()
   },
 }))

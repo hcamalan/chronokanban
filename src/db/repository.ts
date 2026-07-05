@@ -1,5 +1,5 @@
 import { getDB } from './db'
-import type { Board, Bucket, TaskCard, Category, Attachment } from '../types'
+import type { Board, Bucket, TaskCard, Category, Attachment, ActivityLogEntry } from '../types'
 
 export async function getAllBoards(): Promise<Board[]> {
   const db = await getDB()
@@ -86,6 +86,15 @@ export async function deleteBoardCascade(boardId: string) {
     await db.delete('categories', category.id)
   }
   await db.delete('boards', boardId)
+}
+
+export async function getAllActivityLog(): Promise<ActivityLogEntry[]> {
+  const db = await getDB()
+  return db.getAll('activityLog')
+}
+export async function putActivityLogEntry(entry: ActivityLogEntry) {
+  const db = await getDB()
+  await db.put('activityLog', entry)
 }
 
 export async function bulkPutAll(data: {

@@ -15,6 +15,7 @@ export function DashboardView({ onOpenTask }: DashboardViewProps) {
   const [scope, setScope] = useState<string>('all')
   const tasks = useStore(useShallow((s) => Object.values(s.tasks)))
   const categories = useStore(useShallow((s) => Object.values(s.categories)))
+  const downloadActivityLog = useStore((s) => s.downloadActivityLog)
 
   const scopedTasks = tasks.filter((t) => scope === 'all' || t.boardId === scope)
   const boardCategories = categories.filter((c) => c.boardId === scope)
@@ -25,7 +26,15 @@ export function DashboardView({ onOpenTask }: DashboardViewProps) {
     <div className="mx-auto max-w-5xl p-6">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Dashboard</h1>
-        <BoardFilterSelect value={scope} onChange={setScope} />
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => downloadActivityLog()}
+            className="rounded px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+          >
+            Download logs
+          </button>
+          <BoardFilterSelect value={scope} onChange={setScope} />
+        </div>
       </div>
 
       <div className="mb-6">

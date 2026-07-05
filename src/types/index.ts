@@ -60,3 +60,22 @@ export interface Attachment {
   blob: Blob
   createdAt: number
 }
+
+export type ActivityActionType =
+  | 'create'
+  | 'update'
+  | 'status-change'
+  | 'move'
+  | 'timer-start'
+  | 'timer-pause'
+  | 'timer-reset'
+  | 'delete'
+
+export interface ActivityLogEntry {
+  id: string
+  taskId: string
+  /** denormalized so history survives the task itself being deleted */
+  taskName: string
+  actionType: ActivityActionType
+  timestamp: number
+}
