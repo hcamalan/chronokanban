@@ -78,4 +78,8 @@ export interface ActivityLogEntry {
   taskName: string
   actionType: ActivityActionType
   timestamp: number
+  /** the task's status at the moment of this event; used to reconstruct end-of-day status */
+  status?: TaskStatus
+  /** epoch ms a work segment began; set only on entries that CLOSE a segment (pause / complete-while-running) */
+  segmentStart?: number
 }

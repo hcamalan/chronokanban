@@ -1,13 +1,13 @@
 import { create } from 'zustand'
 import * as repo from '../db/repository'
 import { buildExportFile, downloadExportFile } from '../db/exportImport'
-import { logActivity, downloadActivityLogCsv } from '../db/activityLog'
+import { logActivity, downloadTimesheetCsv, type WorkInterval } from '../db/activityLog'
 import { createDebouncer } from './persist'
 import type { Board, Bucket, TaskCard, Category } from '../types'
 
 const debouncedPutTask = createDebouncer((task: TaskCard) => {
   repo.putTask(task)
-  logActivity(task.id, task.name, 'update')
+  logActivity(task.id, task.name, 'update', task.status)
 }, 450)
 const debouncedPutBoard = createDebouncer(repo.putBoard, 450)
 const debouncedPutBucket = createDebouncer(repo.putBucket, 450)
@@ -101,7 +101,7 @@ export const useStore = create<AppState>((set, get) => ({
       return { boards, buckets, tasks, categories }
     })
     repo.deleteBoardCascade(id)
-    for (const t of affectedTasks) logActivity(t.id, t.name, 'delete')
+    for (const t of affectedTasks) logActivity(t.id, t.name, 'delete', t.status)
   },
 
   addBucket: (boardId, name) => {
@@ -129,7 +129,7 @@ export const useStore = create<AppState>((set, get) => ({
       return { buckets, tasks }
     })
     repo.deleteBucketCascade(id)
-    for (const t of affectedTasks) logActivity(t.id, t.name, 'delete')
+    for (const t of affectedTasks) logActivity(t.id, t.name, 'delete', t.status)
   },
 
   addTask: (boardId, bucketId, name) => {
@@ -155,7 +155,7 @@ export const useStore = create<AppState>((set, get) => ({
     }
     set((state) => ({ tasks: { ...state.tasks, [id]: task } }))
     repo.putTask(task)
-    logActivity(id, name, 'create')
+    logActivity(id, name, 'create', task.status)
     return id
   },
   updateTask: (id, patch) => {
@@ -170,19 +170,19 @@ export const useStore = create<AppState>((set, get) => ({
       const updated = get().tasks[id]
       if (updated) {
         repo.putTask(updated)
-        logActivity(id, updated.name, 'status' in patch ? 'status-change' : 'update')
+        logActivity(id, updated.name, 'status' in patch ? 'status-change' : 'update', updated.status)
       }
     }
   },
   deleteTask: (id) => {
-    const taskName = get().tasks[id]?.name
+    const task = get().tasks[id]
     set((state) => {
       const tasks = { ...state.tasks }
       delete tasks[id]
       return { tasks }
     })
     repo.deleteTask(id)
-    if (taskName != null) logActivity(id, taskName, 'delete')
+    if (task) logActivity(id, task.name, 'delete', task.status)
   },
   moveTask: (taskId, toBucketId, toIndex) => {
     const state = get()
@@ -218,7 +218,7 @@ export const useStore = create<AppState>((set, get) => ({
         set((s) => ({ tasks: { ...s.tasks, ...resequenced } }))
         Object.values(resequenced).forEach((t) => repo.putTask(t))
       }
-      logActivity(taskId, task.name, 'move')
+      logActivity(taskId, task.name, 'move', task.status)
     }
   },
   moveTaskToBoard: (taskId, newBoardId) => {
@@ -233,7 +233,7 @@ export const useStore = create<AppState>((set, get) => ({
     const updated: TaskCard = { ...task, boardId: newBoardId, bucketId: newBucketId, categoryId: null, order }
     set((state) => ({ tasks: { ...state.tasks, [taskId]: updated } }))
     repo.putTask(updated)
-    logActivity(taskId, task.name, 'move')
+    logActivity(taskId, task.name, 'move', updated.status)
   },
 
   startTimer: (taskId) => {
@@ -246,16 +246,17 @@ export const useStore = create<AppState>((set, get) => ({
     }
     set((state) => ({ tasks: { ...state.tasks, [taskId]: updated } }))
     repo.putTask(updated)
-    logActivity(taskId, task.name, 'timer-start')
+    logActivity(taskId, task.name, 'timer-start', updated.status)
   },
   pauseTimer: (taskId) => {
     const task = get().tasks[taskId]
     if (!task || !task.timer.isRunning || task.timer.startedAt == null) return
-    const elapsedSeconds = task.timer.elapsedSeconds + (Date.now() - task.timer.startedAt) / 1000
+    const segmentStart = task.timer.startedAt
+    const elapsedSeconds = task.timer.elapsedSeconds + (Date.now() - segmentStart) / 1000
     const updated: TaskCard = { ...task, timer: { isRunning: false, elapsedSeconds, startedAt: null } }
     set((state) => ({ tasks: { ...state.tasks, [taskId]: updated } }))
     repo.putTask(updated)
-    logActivity(taskId, task.name, 'timer-pause')
+    logActivity(taskId, task.name, 'timer-pause', updated.status, segmentStart)
   },
   resetTimer: (taskId) => {
     const task = get().tasks[taskId]
@@ -263,21 +264,23 @@ export const useStore = create<AppState>((set, get) => ({
     const updated: TaskCard = { ...task, timer: { isRunning: false, elapsedSeconds: 0, startedAt: null } }
     set((state) => ({ tasks: { ...state.tasks, [taskId]: updated } }))
     repo.putTask(updated)
-    logActivity(taskId, task.name, 'timer-reset')
+    logActivity(taskId, task.name, 'timer-reset', updated.status)
   },
 
   completeTask: (taskId) => {
     const task = get().tasks[taskId]
     if (!task) return
     let timer = task.timer
+    let segmentStart: number | undefined
     if (timer.isRunning && timer.startedAt != null) {
-      const elapsedSeconds = timer.elapsedSeconds + (Date.now() - timer.startedAt) / 1000
+      segmentStart = timer.startedAt
+      const elapsedSeconds = timer.elapsedSeconds + (Date.now() - segmentStart) / 1000
       timer = { isRunning: false, elapsedSeconds, startedAt: null }
     }
     const updated: TaskCard = { ...task, status: 'completed', completedAt: Date.now(), timer }
     set((state) => ({ tasks: { ...state.tasks, [taskId]: updated } }))
     repo.putTask(updated)
-    logActivity(taskId, task.name, 'status-change')
+    logActivity(taskId, task.name, 'status-change', updated.status, segmentStart)
   },
   uncompleteTask: (taskId) => {
     const task = get().tasks[taskId]
@@ -285,7 +288,7 @@ export const useStore = create<AppState>((set, get) => ({
     const updated: TaskCard = { ...task, status: 'not-started', completedAt: null }
     set((state) => ({ tasks: { ...state.tasks, [taskId]: updated } }))
     repo.putTask(updated)
-    logActivity(taskId, task.name, 'status-change')
+    logActivity(taskId, task.name, 'status-change', updated.status)
   },
 
   addCategory: (boardId, name, color) => {
@@ -335,6 +338,10 @@ export const useStore = create<AppState>((set, get) => ({
     downloadExportFile(data)
   },
   downloadActivityLog: async () => {
-    await downloadActivityLogCsv()
+    const now = Date.now()
+    const runningIntervals: WorkInterval[] = Object.values(get().tasks)
+      .filter((t) => t.timer.isRunning && t.timer.startedAt != null)
+      .map((t) => ({ taskId: t.id, taskName: t.name, start: t.timer.startedAt as number, end: now }))
+    await downloadTimesheetCsv(runningIntervals)
   },
 }))

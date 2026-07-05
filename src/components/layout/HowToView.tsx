@@ -54,9 +54,10 @@ export function HowToView() {
           breakdowns; late tasks and effectiveness are also available across all boards combined.
         </p>
         <p className="mt-2">
-          <strong>Download logs</strong> exports a CSV activity log of everything that's happened across your
-          tasks — created, updated, status changes, moves, timer events, and deletions — with a timestamp for
-          each entry.
+          <strong>Download logs</strong> exports a CSV timesheet: one row per day and task you tracked time on,
+          with the total hours spent on that task that day and the task's status at the end of that day. Open it
+          in Excel to review or share how your week broke down. (Only time tracked with the timer is included,
+          from when this feature was added onward.)
         </p>
       </section>
 
