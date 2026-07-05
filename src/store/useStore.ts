@@ -84,8 +84,7 @@ export const useStore = create<AppState>((set, get) => ({
       if (!board) return state
       return { boards: { ...state.boards, [id]: { ...board, name } } }
     })
-    const updated = get().boards[id]
-    if (updated) debouncedPutBoard(id, updated)
+    debouncedPutBoard(id, () => get().boards[id])
   },
   deleteBoard: (id) => {
     set((state) => {
@@ -113,8 +112,7 @@ export const useStore = create<AppState>((set, get) => ({
       if (!bucket) return state
       return { buckets: { ...state.buckets, [id]: { ...bucket, name } } }
     })
-    const updated = get().buckets[id]
-    if (updated) debouncedPutBucket(id, updated)
+    debouncedPutBucket(id, () => get().buckets[id])
   },
   deleteBucket: (id) => {
     set((state) => {
@@ -157,12 +155,11 @@ export const useStore = create<AppState>((set, get) => ({
       if (!task) return state
       return { tasks: { ...state.tasks, [id]: { ...task, ...patch } } }
     })
-    const updated = get().tasks[id]
-    if (!updated) return
     if ('name' in patch || 'description' in patch) {
-      debouncedPutTask(id, updated)
+      debouncedPutTask(id, () => get().tasks[id])
     } else {
-      repo.putTask(updated)
+      const updated = get().tasks[id]
+      if (updated) repo.putTask(updated)
     }
   },
   deleteTask: (id) => {
@@ -283,12 +280,11 @@ export const useStore = create<AppState>((set, get) => ({
       if (!category) return state
       return { categories: { ...state.categories, [id]: { ...category, ...patch } } }
     })
-    const updated = get().categories[id]
-    if (!updated) return
     if ('name' in patch) {
-      debouncedPutCategory(id, updated)
+      debouncedPutCategory(id, () => get().categories[id])
     } else {
-      repo.putCategory(updated)
+      const updated = get().categories[id]
+      if (updated) repo.putCategory(updated)
     }
   },
   deleteCategory: (id) => {
