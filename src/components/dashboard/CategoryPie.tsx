@@ -1,5 +1,4 @@
-import { PieChart, Pie, Sector, Tooltip, ResponsiveContainer, Legend } from 'recharts'
-import type { PieSectorShapeProps } from 'recharts'
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 import type { TaskCard, Category } from '../../types'
 
 interface CategoryPieProps {
@@ -30,15 +29,14 @@ export function CategoryPie({ title, tasks, categories }: CategoryPieProps) {
       ) : (
         <ResponsiveContainer width="100%" height={220}>
           <PieChart>
-            <Pie
-              data={data}
-              dataKey="value"
-              nameKey="name"
-              outerRadius={80}
-              label
-              isAnimationActive={false}
-              shape={(props: PieSectorShapeProps) => <Sector {...props} fill={data[props.index]?.color} />}
-            />
+            {/* isAnimationActive disabled: Recharts 3.9.2's entrance animation fails to resolve to a
+                rendered state for Pie, leaving sectors empty. Cell (not `shape`) is what feeds the
+                Legend its per-slice colors, so it's kept despite being soft-deprecated pre-v4. */}
+            <Pie data={data} dataKey="value" nameKey="name" outerRadius={80} label isAnimationActive={false}>
+              {data.map((d) => (
+                <Cell key={d.name} fill={d.color} />
+              ))}
+            </Pie>
             <Tooltip />
             <Legend />
           </PieChart>
