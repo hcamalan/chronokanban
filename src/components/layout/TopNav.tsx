@@ -4,8 +4,8 @@ import { ConfirmDialog } from '../boards/ConfirmDialog'
 import { DarkModeToggle } from './DarkModeToggle'
 
 interface TopNavProps {
-  activeTab: 'boards' | 'dashboard'
-  onNavigate: (tab: 'boards' | 'dashboard') => void
+  activeTab: 'boards' | 'dashboard' | 'howto'
+  onNavigate: (tab: 'boards' | 'dashboard' | 'howto') => void
 }
 
 export function TopNav({ activeTab, onNavigate }: TopNavProps) {
@@ -20,7 +20,7 @@ export function TopNav({ activeTab, onNavigate }: TopNavProps) {
     e.target.value = ''
   }
 
-  const tabClass = (tab: 'boards' | 'dashboard') =>
+  const tabClass = (tab: 'boards' | 'dashboard' | 'howto') =>
     `rounded px-3 py-1.5 text-sm font-medium ${
       activeTab === tab
         ? 'bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900'
@@ -30,13 +30,19 @@ export function TopNav({ activeTab, onNavigate }: TopNavProps) {
   return (
     <header className="flex items-center justify-between border-b border-gray-200 bg-white px-6 py-3 dark:border-gray-700 dark:bg-gray-900">
       <div className="flex items-center gap-4">
-        <span className="text-lg font-semibold text-gray-900 dark:text-gray-100">ChronoKanban</span>
+        <div className="flex items-center gap-2">
+          <img src="./logo.svg" alt="" className="h-7 w-7" />
+          <span className="text-lg font-semibold text-gray-900 dark:text-gray-100">ChronoKanban</span>
+        </div>
         <nav className="flex items-center gap-1">
           <button onClick={() => onNavigate('boards')} className={tabClass('boards')}>
             Boards
           </button>
           <button onClick={() => onNavigate('dashboard')} className={tabClass('dashboard')}>
             Dashboard
+          </button>
+          <button onClick={() => onNavigate('howto')} className={tabClass('howto')}>
+            How to
           </button>
         </nav>
       </div>

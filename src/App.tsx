@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useStore } from './store/useStore'
 import { TopNav } from './components/layout/TopNav'
+import { HowToView } from './components/layout/HowToView'
 import { BoardListView } from './components/boards/BoardListView'
 import { BoardDetailView } from './components/board/BoardDetailView'
 import { DashboardView } from './components/dashboard/DashboardView'
 import { TaskDetailModal } from './components/task/TaskDetailModal'
 
-type View = { kind: 'boards' } | { kind: 'board'; boardId: string } | { kind: 'dashboard' }
+type View = { kind: 'boards' } | { kind: 'board'; boardId: string } | { kind: 'dashboard' } | { kind: 'howto' }
 
 function App() {
   const [view, setView] = useState<View>({ kind: 'boards' })
@@ -25,7 +26,7 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       <TopNav
-        activeTab={view.kind === 'dashboard' ? 'dashboard' : 'boards'}
+        activeTab={view.kind === 'board' ? 'boards' : view.kind}
         onNavigate={(tab) => setView({ kind: tab })}
       />
       {view.kind === 'boards' && (
@@ -41,6 +42,7 @@ function App() {
       {view.kind === 'dashboard' && (
         <DashboardView onOpenTask={(taskId) => setSelectedTaskId(taskId)} />
       )}
+      {view.kind === 'howto' && <HowToView />}
       {selectedTaskId && (
         <TaskDetailModal taskId={selectedTaskId} onClose={() => setSelectedTaskId(null)} />
       )}
