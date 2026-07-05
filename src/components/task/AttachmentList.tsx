@@ -57,7 +57,7 @@ export function AttachmentList({ taskId }: AttachmentListProps) {
     <div className="mt-4">
       <h3 className="mb-2 text-sm font-medium text-gray-500 dark:text-gray-400">Attachments</h3>
       {attachments.length > 0 && (
-        <ul className="mb-2 flex flex-col gap-1">
+        <ul className="mb-3 flex flex-col gap-1">
           {attachments.map((a) => (
             <li
               key={a.id}
@@ -73,15 +73,19 @@ export function AttachmentList({ taskId }: AttachmentListProps) {
               <button
                 onClick={() => handleDelete(a.id)}
                 aria-label={`Delete attachment ${a.fileName}`}
-                className="ml-2 flex-shrink-0 text-xs text-gray-400 hover:text-red-500"
+                className="ml-2 flex-shrink-0 rounded px-2 py-0.5 text-xs text-gray-500 hover:bg-red-50 hover:text-red-600 dark:text-gray-400 dark:hover:bg-red-950 dark:hover:text-red-400"
               >
-                ×
+                Remove
               </button>
             </li>
           ))}
         </ul>
       )}
-      <input type="file" onChange={handleFileSelected} className="text-sm text-gray-600 dark:text-gray-300" />
+      <input
+        type="file"
+        onChange={handleFileSelected}
+        className="text-sm text-gray-600 file:mr-3 file:rounded file:border-0 file:bg-gray-900 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-white hover:file:bg-gray-700 dark:text-gray-300 dark:file:bg-gray-100 dark:file:text-gray-900 dark:hover:file:bg-gray-300"
+      />
     </div>
   )
 }

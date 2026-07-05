@@ -1,23 +1,70 @@
 import { useRef, useState } from 'react'
 import { useStore } from '../../store/useStore'
-import { ConfirmDialog } from '../boards/ConfirmDialog'
+import { ImportConflictDialog } from '../boards/ImportConflictDialog'
 import { DarkModeToggle } from './DarkModeToggle'
+import {
+  parseImportFile,
+  findBoardConflicts,
+  mergeImportFile,
+  type BoardConflict,
+  type ConflictDecision,
+} from '../../db/exportImport'
 
 interface TopNavProps {
   activeTab: 'boards' | 'dashboard' | 'howto'
   onNavigate: (tab: 'boards' | 'dashboard' | 'howto') => void
 }
 
+interface ImportFlow {
+  data: Awaited<ReturnType<typeof parseImportFile>>
+  conflicts: BoardConflict[]
+  currentIndex: number
+  decisions: Record<string, ConflictDecision>
+}
+
 export function TopNav({ activeTab, onNavigate }: TopNavProps) {
   const exportData = useStore((s) => s.exportData)
-  const importData = useStore((s) => s.importData)
+  const loadFromDB = useStore((s) => s.loadFromDB)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [pendingFile, setPendingFile] = useState<File | null>(null)
+  const [importFlow, setImportFlow] = useState<ImportFlow | null>(null)
 
-  function handleFileSelected(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleFileSelected(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
-    if (file) setPendingFile(file)
     e.target.value = ''
+    if (!file) return
+
+    let data
+    try {
+      data = await parseImportFile(file)
+    } catch {
+      window.alert('This file could not be read as a ChronoKanban export.')
+      return
+    }
+
+    const existingBoards = Object.values(useStore.getState().boards)
+    const conflicts = findBoardConflicts(data, existingBoards)
+
+    if (conflicts.length === 0) {
+      await mergeImportFile(data, [], {})
+      await loadFromDB()
+      return
+    }
+    setImportFlow({ data, conflicts, currentIndex: 0, decisions: {} })
+  }
+
+  async function handleConflictDecision(decision: ConflictDecision) {
+    if (!importFlow) return
+    const conflict = importFlow.conflicts[importFlow.currentIndex]
+    const decisions = { ...importFlow.decisions, [conflict.incoming.id]: decision }
+    const nextIndex = importFlow.currentIndex + 1
+
+    if (nextIndex >= importFlow.conflicts.length) {
+      await mergeImportFile(importFlow.data, importFlow.conflicts, decisions)
+      await loadFromDB()
+      setImportFlow(null)
+    } else {
+      setImportFlow({ ...importFlow, decisions, currentIndex: nextIndex })
+    }
   }
 
   const tabClass = (tab: 'boards' | 'dashboard' | 'howto') =>
@@ -77,16 +124,10 @@ export function TopNav({ activeTab, onNavigate }: TopNavProps) {
         <DarkModeToggle />
       </div>
 
-      {pendingFile && (
-        <ConfirmDialog
-          message={`Importing "${pendingFile.name}" will permanently replace all current boards, buckets, tasks, categories, and attachments with the contents of this file. This cannot be undone.`}
-          confirmLabel="Import"
-          onCancel={() => setPendingFile(null)}
-          onConfirm={() => {
-            const file = pendingFile
-            setPendingFile(null)
-            importData(file)
-          }}
+      {importFlow && (
+        <ImportConflictDialog
+          boardName={importFlow.conflicts[importFlow.currentIndex].incoming.name}
+          onDecision={handleConflictDecision}
         />
       )}
     </header>

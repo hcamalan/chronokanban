@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import * as repo from '../db/repository'
-import { buildExportFile, downloadExportFile, parseImportFile, applyImportFile } from '../db/exportImport'
+import { buildExportFile, downloadExportFile } from '../db/exportImport'
 import { createDebouncer } from './persist'
 import type { Board, Bucket, TaskCard, Category } from '../types'
 
@@ -44,7 +44,6 @@ interface AppState {
   deleteCategory: (id: string) => void
 
   exportData: () => Promise<void>
-  importData: (file: File) => Promise<void>
 }
 
 export const useStore = create<AppState>((set, get) => ({
@@ -312,10 +311,5 @@ export const useStore = create<AppState>((set, get) => ({
   exportData: async () => {
     const data = await buildExportFile()
     downloadExportFile(data)
-  },
-  importData: async (file) => {
-    const data = await parseImportFile(file)
-    await applyImportFile(data)
-    await get().loadFromDB()
   },
 }))

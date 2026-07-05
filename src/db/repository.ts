@@ -88,22 +88,6 @@ export async function deleteBoardCascade(boardId: string) {
   await db.delete('boards', boardId)
 }
 
-export async function clearAllStores() {
-  const db = await getDB()
-  const tx = db.transaction(
-    ['boards', 'buckets', 'tasks', 'categories', 'attachments'],
-    'readwrite',
-  )
-  await Promise.all([
-    tx.objectStore('boards').clear(),
-    tx.objectStore('buckets').clear(),
-    tx.objectStore('tasks').clear(),
-    tx.objectStore('categories').clear(),
-    tx.objectStore('attachments').clear(),
-  ])
-  await tx.done
-}
-
 export async function bulkPutAll(data: {
   boards: Board[]
   buckets: Bucket[]

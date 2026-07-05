@@ -7,7 +7,7 @@ import { AttachmentList } from './AttachmentList'
 import { ConfirmDialog } from '../boards/ConfirmDialog'
 import { flushAllDebouncers } from '../../store/persist'
 import { formatDuration } from '../../utils/time'
-import type { Urgency, Importance } from '../../types'
+import type { Urgency, Importance, TaskStatus } from '../../types'
 
 interface TaskDetailModalProps {
   taskId: string
@@ -122,12 +122,21 @@ export function TaskDetailModal({ taskId, onClose }: TaskDetailModalProps) {
           <label className="flex flex-col gap-1 text-sm text-gray-600 dark:text-gray-300">
             Status
             <select
-              value={task.status === 'completed' ? 'in-progress' : task.status}
-              onChange={(e) => updateTask(taskId, { status: e.target.value as 'not-started' | 'in-progress' })}
+              value={task.status}
+              onChange={(e) => {
+                const newStatus = e.target.value as TaskStatus
+                if (newStatus === 'completed') {
+                  completeTask(taskId)
+                } else {
+                  if (task.status === 'completed') uncompleteTask(taskId)
+                  updateTask(taskId, { status: newStatus })
+                }
+              }}
               className="rounded border border-gray-300 px-2 py-1 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
             >
               <option value="not-started">Not started</option>
               <option value="in-progress">In progress</option>
+              <option value="completed">Completed</option>
             </select>
           </label>
 
