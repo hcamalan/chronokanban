@@ -1,0 +1,55 @@
+import { useState } from 'react'
+import { useShallow } from 'zustand/react/shallow'
+import { useStore } from '../../store/useStore'
+import { BoardFilterSelect } from './BoardFilterSelect'
+import { CategoryPie } from './CategoryPie'
+import { TimeByCategoryChart } from './TimeByCategoryChart'
+import { LateTasksList } from './LateTasksList'
+import { EffectivenessTiles } from './EffectivenessTiles'
+
+interface DashboardViewProps {
+  onOpenTask: (taskId: string) => void
+}
+
+export function DashboardView({ onOpenTask }: DashboardViewProps) {
+  const [scope, setScope] = useState<string>('all')
+  const tasks = useStore(useShallow((s) => Object.values(s.tasks)))
+  const categories = useStore(useShallow((s) => Object.values(s.categories)))
+
+  const scopedTasks = tasks.filter((t) => scope === 'all' || t.boardId === scope)
+  const boardCategories = categories.filter((c) => c.boardId === scope)
+  const completed = scopedTasks.filter((t) => t.status === 'completed')
+  const incomplete = scopedTasks.filter((t) => t.status !== 'completed')
+
+  return (
+    <div className="mx-auto max-w-5xl p-6">
+      <div className="mb-6 flex items-center justify-between">
+        <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Dashboard</h1>
+        <BoardFilterSelect value={scope} onChange={setScope} />
+      </div>
+
+      <div className="mb-6">
+        <EffectivenessTiles tasks={scopedTasks} />
+      </div>
+
+      {scope === 'all' ? (
+        <p className="mb-6 text-sm text-gray-500 dark:text-gray-400">
+          Select a specific board above to see category breakdowns.
+        </p>
+      ) : (
+        <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
+          <CategoryPie title="Completed by category" tasks={completed} categories={boardCategories} />
+          <CategoryPie title="Incomplete by category" tasks={incomplete} categories={boardCategories} />
+          <div className="md:col-span-2">
+            <TimeByCategoryChart tasks={scopedTasks} categories={boardCategories} />
+          </div>
+        </div>
+      )}
+
+      <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
+        <h3 className="mb-2 text-sm font-medium text-gray-500 dark:text-gray-400">Late tasks</h3>
+        <LateTasksList tasks={scopedTasks} onOpenTask={onOpenTask} />
+      </div>
+    </div>
+  )
+}

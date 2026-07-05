@@ -1,0 +1,62 @@
+export type Urgency = 'low' | 'medium' | 'high'
+export type Importance = 'low' | 'medium' | 'high'
+export type TaskStatus = 'not-started' | 'in-progress' | 'completed'
+
+export interface Category {
+  id: string
+  boardId: string
+  name: string
+  color: string
+}
+
+export interface Board {
+  id: string
+  name: string
+  order: number
+  createdAt: number
+}
+
+export interface Bucket {
+  id: string
+  boardId: string
+  name: string
+  order: number
+}
+
+export interface TimerState {
+  isRunning: boolean
+  /** accumulated time NOT counting the current running segment */
+  elapsedSeconds: number
+  /** epoch ms when the current running segment began; null if paused */
+  startedAt: number | null
+}
+
+export interface TaskCard {
+  id: string
+  boardId: string
+  bucketId: string
+  name: string
+  categoryId: string | null
+  status: TaskStatus
+  assignedTo: string
+  dueDate: string | null
+  urgency: Urgency
+  importance: Importance
+  description: string
+  storyPoints: number | null
+  /** position within its bucket */
+  order: number
+  timer: TimerState
+  createdAt: number
+  completedAt: number | null
+}
+
+export interface Attachment {
+  id: string
+  taskId: string
+  fileName: string
+  mimeType: string
+  size: number
+  blob: Blob
+  createdAt: number
+}
