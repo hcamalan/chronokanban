@@ -47,6 +47,14 @@ export function TopNav({ activeTab, onNavigate }: TopNavProps) {
         </nav>
       </div>
       <div className="flex items-center gap-2">
+        <a
+          href="https://paypal.me/HuseyinCamalan"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="rounded px-3 py-1.5 text-sm text-pink-700 hover:bg-pink-50 dark:text-pink-300 dark:hover:bg-pink-950"
+        >
+          ♥ Donate
+        </a>
         <button
           onClick={() => exportData()}
           className="rounded px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"

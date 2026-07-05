@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useStore } from './store/useStore'
 import { TopNav } from './components/layout/TopNav'
 import { HowToView } from './components/layout/HowToView'
+import { Footer } from './components/layout/Footer'
 import { BoardListView } from './components/boards/BoardListView'
 import { BoardDetailView } from './components/board/BoardDetailView'
 import { DashboardView } from './components/dashboard/DashboardView'
@@ -24,25 +25,28 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+    <div className="flex min-h-screen flex-col bg-gray-50 dark:bg-gray-950">
       <TopNav
         activeTab={view.kind === 'board' ? 'boards' : view.kind}
         onNavigate={(tab) => setView({ kind: tab })}
       />
-      {view.kind === 'boards' && (
-        <BoardListView onOpenBoard={(boardId) => setView({ kind: 'board', boardId })} />
-      )}
-      {view.kind === 'board' && (
-        <BoardDetailView
-          boardId={view.boardId}
-          onBack={() => setView({ kind: 'boards' })}
-          onOpenTask={(taskId) => setSelectedTaskId(taskId)}
-        />
-      )}
-      {view.kind === 'dashboard' && (
-        <DashboardView onOpenTask={(taskId) => setSelectedTaskId(taskId)} />
-      )}
-      {view.kind === 'howto' && <HowToView />}
+      <div className="flex-1">
+        {view.kind === 'boards' && (
+          <BoardListView onOpenBoard={(boardId) => setView({ kind: 'board', boardId })} />
+        )}
+        {view.kind === 'board' && (
+          <BoardDetailView
+            boardId={view.boardId}
+            onBack={() => setView({ kind: 'boards' })}
+            onOpenTask={(taskId) => setSelectedTaskId(taskId)}
+          />
+        )}
+        {view.kind === 'dashboard' && (
+          <DashboardView onOpenTask={(taskId) => setSelectedTaskId(taskId)} />
+        )}
+        {view.kind === 'howto' && <HowToView />}
+      </div>
+      <Footer />
       {selectedTaskId && (
         <TaskDetailModal taskId={selectedTaskId} onClose={() => setSelectedTaskId(null)} />
       )}
