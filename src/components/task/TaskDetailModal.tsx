@@ -29,6 +29,8 @@ export function TaskDetailModal({ taskId, onClose }: TaskDetailModalProps) {
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [elapsedText, setElapsedText] = useState(() => formatHHMM(task?.timer.elapsedSeconds ?? 0))
   const [elapsedFocused, setElapsedFocused] = useState(false)
+  const [descriptionExpanded, setDescriptionExpanded] = useState(false)
+  const [maximized, setMaximized] = useState(false)
 
   // Re-sync the displayed text whenever the stored elapsed time changes (timer actions, or our own
   // committed edits) — but never while the user is actively focused in the field, so it can't clobber
@@ -65,7 +67,9 @@ export function TaskDetailModal({ taskId, onClose }: TaskDetailModalProps) {
       onClick={handleClose}
     >
       <div
-        className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white p-6 shadow-xl dark:bg-gray-900"
+        className={`overflow-y-auto rounded-lg bg-white p-6 shadow-xl dark:bg-gray-900 ${
+          maximized ? 'h-[95vh] w-[95vw] max-w-none' : 'max-h-[90vh] w-full max-w-2xl'
+        }`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex items-start justify-between">
@@ -85,13 +89,29 @@ export function TaskDetailModal({ taskId, onClose }: TaskDetailModalProps) {
               }`}
             />
           </div>
-          <button
-            onClick={handleClose}
-            aria-label="Close"
-            className="ml-3 rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800"
-          >
-            ✕
-          </button>
+          <div className="ml-3 flex flex-shrink-0 items-center gap-1">
+            <button
+              onClick={handleClose}
+              aria-label="Minimize"
+              className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800"
+            >
+              −
+            </button>
+            <button
+              onClick={() => setMaximized((v) => !v)}
+              aria-label={maximized ? 'Restore' : 'Maximize'}
+              className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800"
+            >
+              {maximized ? '❐' : '□'}
+            </button>
+            <button
+              onClick={handleClose}
+              aria-label="Close"
+              className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800"
+            >
+              ✕
+            </button>
+          </div>
         </div>
 
         <div className="mb-4 flex flex-wrap items-center gap-3">
@@ -244,10 +264,18 @@ export function TaskDetailModal({ taskId, onClose }: TaskDetailModalProps) {
           <textarea
             value={task.description}
             onChange={(e) => updateTask(taskId, { description: e.target.value })}
-            rows={4}
+            rows={descriptionExpanded ? 16 : 4}
             className="rounded border border-gray-300 px-2 py-1 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
           />
         </label>
+        <div className="flex justify-end">
+          <button
+            onClick={() => setDescriptionExpanded((v) => !v)}
+            className="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+          >
+            {descriptionExpanded ? 'Collapse' : 'Expand'}
+          </button>
+        </div>
 
         <AttachmentList taskId={taskId} />
 

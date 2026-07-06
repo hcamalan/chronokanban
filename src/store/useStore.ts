@@ -25,12 +25,15 @@ interface AppState {
   addBoard: (name: string) => string
   renameBoard: (id: string, name: string) => void
   deleteBoard: (id: string) => void
+  reorderBoards: (orderedIds: string[]) => void
 
   addBucket: (boardId: string, name: string) => string
   renameBucket: (id: string, name: string) => void
   deleteBucket: (id: string) => void
+  reorderBuckets: (boardId: string, orderedIds: string[]) => void
 
   addTask: (boardId: string, bucketId: string, name: string) => string
+  addTaskAtTop: (boardId: string, bucketId: string) => string
   updateTask: (id: string, patch: Partial<TaskCard>) => void
   deleteTask: (id: string) => void
   moveTask: (taskId: string, toBucketId: string, toIndex: number) => void
@@ -104,6 +107,16 @@ export const useStore = create<AppState>((set, get) => ({
     repo.deleteBoardCascade(id)
     for (const t of affectedTasks) logActivity(t.id, t.name, 'delete', t.status)
   },
+  reorderBoards: (orderedIds) => {
+    const updates: Record<string, Board> = {}
+    orderedIds.forEach((id, index) => {
+      const board = get().boards[id]
+      if (board && board.order !== index) updates[id] = { ...board, order: index }
+    })
+    if (Object.keys(updates).length === 0) return
+    set((state) => ({ boards: { ...state.boards, ...updates } }))
+    Object.values(updates).forEach((b) => repo.putBoard(b))
+  },
 
   addBucket: (boardId, name) => {
     const id = crypto.randomUUID()
@@ -132,6 +145,16 @@ export const useStore = create<AppState>((set, get) => ({
     repo.deleteBucketCascade(id)
     for (const t of affectedTasks) logActivity(t.id, t.name, 'delete', t.status)
   },
+  reorderBuckets: (boardId, orderedIds) => {
+    const updates: Record<string, Bucket> = {}
+    orderedIds.forEach((id, index) => {
+      const bucket = get().buckets[id]
+      if (bucket && bucket.boardId === boardId && bucket.order !== index) updates[id] = { ...bucket, order: index }
+    })
+    if (Object.keys(updates).length === 0) return
+    set((state) => ({ buckets: { ...state.buckets, ...updates } }))
+    Object.values(updates).forEach((b) => repo.putBucket(b))
+  },
 
   addTask: (boardId, bucketId, name) => {
     const id = crypto.randomUUID()
@@ -157,6 +180,40 @@ export const useStore = create<AppState>((set, get) => ({
     set((state) => ({ tasks: { ...state.tasks, [id]: task } }))
     repo.putTask(task)
     logActivity(id, name, 'create', task.status)
+    return id
+  },
+  addTaskAtTop: (boardId, bucketId) => {
+    const id = crypto.randomUUID()
+    const task: TaskCard = {
+      id,
+      boardId,
+      bucketId,
+      name: '',
+      categoryId: null,
+      status: 'not-started',
+      assignedTo: '',
+      dueDate: null,
+      urgency: 'medium',
+      importance: 'medium',
+      description: '',
+      storyPoints: null,
+      order: 0,
+      timer: { isRunning: false, elapsedSeconds: 0, startedAt: null },
+      createdAt: Date.now(),
+      completedAt: null,
+    }
+    // Shift every other active task in this bucket down by one to make room at the top —
+    // completed tasks keep their own separate order sequence, same convention as moveTask.
+    const shifted: Record<string, TaskCard> = {}
+    Object.values(get().tasks)
+      .filter((t) => t.bucketId === bucketId && t.status !== 'completed')
+      .forEach((t) => {
+        shifted[t.id] = { ...t, order: t.order + 1 }
+      })
+    set((state) => ({ tasks: { ...state.tasks, ...shifted, [id]: task } }))
+    repo.putTask(task)
+    Object.values(shifted).forEach((t) => repo.putTask(t))
+    logActivity(id, task.name, 'create', task.status)
     return id
   },
   updateTask: (id, patch) => {

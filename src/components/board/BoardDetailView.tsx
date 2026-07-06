@@ -10,8 +10,9 @@ import {
   type DragEndEvent,
   type DragStartEvent,
 } from '@dnd-kit/core'
+import { SortableContext, horizontalListSortingStrategy, arrayMove } from '@dnd-kit/sortable'
 import { useStore } from '../../store/useStore'
-import { BucketColumn } from './BucketColumn'
+import { BucketColumn, bucketSortableId } from './BucketColumn'
 import { CategoryManager } from './CategoryManager'
 import { completedDroppableId } from './CompletedSection'
 import { TaskCardMini } from '../task/TaskCardMini'
@@ -34,7 +35,9 @@ export function BoardDetailView({ boardId, onBack, onOpenTask }: BoardDetailView
   const tasks = useStore((s) => s.tasks)
   const renameBoard = useStore((s) => s.renameBoard)
   const addBucket = useStore((s) => s.addBucket)
+  const addTaskAtTop = useStore((s) => s.addTaskAtTop)
   const moveTask = useStore((s) => s.moveTask)
+  const reorderBuckets = useStore((s) => s.reorderBuckets)
   const [editingName, setEditingName] = useState(false)
   const [name, setName] = useState(board?.name ?? '')
   const [newBucketName, setNewBucketName] = useState('')
@@ -43,7 +46,8 @@ export function BoardDetailView({ boardId, onBack, onOpenTask }: BoardDetailView
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }))
 
   function handleDragStart(event: DragStartEvent) {
-    setActiveTaskId(String(event.active.id))
+    const id = String(event.active.id)
+    setActiveTaskId(tasks[id] ? id : null)
   }
 
   function handleDragEnd(event: DragEndEvent) {
@@ -51,12 +55,35 @@ export function BoardDetailView({ boardId, onBack, onOpenTask }: BoardDetailView
     const { active, over } = event
     if (!over) return
 
-    const draggedTaskId = String(active.id)
+    const activeId = String(active.id)
+    const overId = String(over.id)
+
+    // Bucket reorder: dragging a bucket (its own distinct sortable id, separate from the bucket's
+    // task-droppable-zone id) rather than a task.
+    const draggedBucket = buckets.find((b) => bucketSortableId(b.id) === activeId)
+    if (draggedBucket) {
+      let targetBucketId: string | null = null
+      const overAsBucket = buckets.find((b) => bucketSortableId(b.id) === overId)
+      if (overAsBucket) {
+        targetBucketId = overAsBucket.id
+      } else if (tasks[overId]) {
+        targetBucketId = tasks[overId].bucketId
+      } else if (buckets.some((b) => b.id === overId)) {
+        targetBucketId = overId
+      }
+      if (!targetBucketId) return
+      const oldIndex = buckets.findIndex((b) => b.id === draggedBucket.id)
+      const newIndex = buckets.findIndex((b) => b.id === targetBucketId)
+      if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) return
+      reorderBuckets(boardId, arrayMove(buckets, oldIndex, newIndex).map((b) => b.id))
+      return
+    }
+
+    const draggedTaskId = activeId
     const draggedTask = tasks[draggedTaskId]
     if (!draggedTask) return
     const draggedIsCompleted = draggedTask.status === 'completed'
 
-    const overId = String(over.id)
     const overTask = tasks[overId]
 
     let toBucketId: string
@@ -100,35 +127,49 @@ export function BoardDetailView({ boardId, onBack, onOpenTask }: BoardDetailView
 
   return (
     <div className="flex h-full flex-col p-6">
-      <div className="mb-6 flex items-center gap-3">
-        <button
-          onClick={onBack}
-          aria-label="Back to boards"
-          className="rounded p-1 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
-        >
-          ←
-        </button>
-        {editingName ? (
-          <input
-            autoFocus
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            onBlur={() => {
-              setEditingName(false)
-              if (name.trim()) renameBoard(boardId, name.trim())
-              else setName(board.name)
-            }}
-            onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
-            className="rounded border border-gray-300 px-2 text-xl font-semibold outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-          />
-        ) : (
-          <h1
-            className="text-xl font-semibold text-gray-900 dark:text-gray-100"
-            onDoubleClick={() => setEditingName(true)}
+      <div className="mb-6 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onBack}
+            aria-label="Back to boards"
+            className="rounded p-1 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
           >
-            {board.name}
-          </h1>
-        )}
+            ←
+          </button>
+          {editingName ? (
+            <input
+              autoFocus
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              onBlur={() => {
+                setEditingName(false)
+                if (name.trim()) renameBoard(boardId, name.trim())
+                else setName(board.name)
+              }}
+              onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
+              className="rounded border border-gray-300 px-2 text-xl font-semibold outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+            />
+          ) : (
+            <h1
+              className="text-xl font-semibold text-gray-900 dark:text-gray-100"
+              onDoubleClick={() => setEditingName(true)}
+            >
+              {board.name}
+            </h1>
+          )}
+        </div>
+        <button
+          onClick={() => {
+            if (buckets.length === 0) return
+            const newTaskId = addTaskAtTop(boardId, buckets[0].id)
+            onOpenTask(newTaskId)
+          }}
+          disabled={buckets.length === 0}
+          title={buckets.length === 0 ? 'Add a bucket first' : undefined}
+          className="rounded bg-gray-900 px-3 py-1.5 text-sm text-white hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-40 dark:bg-gray-100 dark:text-gray-900"
+        >
+          Add task
+        </button>
       </div>
 
       <DndContext
@@ -137,33 +178,35 @@ export function BoardDetailView({ boardId, onBack, onOpenTask }: BoardDetailView
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="flex flex-1 gap-4 overflow-x-auto pb-4">
-          {buckets.map((bucket) => (
-            <BucketColumn key={bucket.id} bucket={bucket} onOpenTask={onOpenTask} />
-          ))}
-          <form
-            onSubmit={(e) => {
-              e.preventDefault()
-              if (!newBucketName.trim()) return
-              addBucket(boardId, newBucketName.trim())
-              setNewBucketName('')
-            }}
-            className="flex h-fit w-64 flex-shrink-0 flex-col gap-2 rounded-lg border-2 border-dashed border-gray-300 p-3 dark:border-gray-600"
-          >
-            <input
-              value={newBucketName}
-              onChange={(e) => setNewBucketName(e.target.value)}
-              placeholder="New bucket name"
-              className="rounded border border-gray-300 px-2 py-1 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-            />
-            <button
-              type="submit"
-              className="rounded bg-gray-900 px-3 py-1 text-sm text-white hover:bg-gray-700 dark:bg-gray-100 dark:text-gray-900"
+        <SortableContext items={buckets.map((b) => bucketSortableId(b.id))} strategy={horizontalListSortingStrategy}>
+          <div className="flex flex-1 gap-4 overflow-x-auto pb-4">
+            {buckets.map((bucket) => (
+              <BucketColumn key={bucket.id} bucket={bucket} onOpenTask={onOpenTask} />
+            ))}
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                if (!newBucketName.trim()) return
+                addBucket(boardId, newBucketName.trim())
+                setNewBucketName('')
+              }}
+              className="flex h-fit w-64 flex-shrink-0 flex-col gap-2 rounded-lg border-2 border-dashed border-gray-300 p-3 dark:border-gray-600"
             >
-              Add bucket
-            </button>
-          </form>
-        </div>
+              <input
+                value={newBucketName}
+                onChange={(e) => setNewBucketName(e.target.value)}
+                placeholder="New bucket name"
+                className="rounded border border-gray-300 px-2 py-1 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+              />
+              <button
+                type="submit"
+                className="rounded bg-gray-900 px-3 py-1 text-sm text-white hover:bg-gray-700 dark:bg-gray-100 dark:text-gray-900"
+              >
+                Add bucket
+              </button>
+            </form>
+          </div>
+        </SortableContext>
         <DragOverlay>
           {activeTaskId && tasks[activeTaskId] ? (
             <TaskCardMini task={tasks[activeTaskId]} onClick={() => {}} />

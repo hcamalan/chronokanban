@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { useDroppable } from '@dnd-kit/core'
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { useStore } from '../../store/useStore'
 import { SortableTaskCardMini } from '../task/SortableTaskCardMini'
 import { CompletedSection } from './CompletedSection'
@@ -11,6 +12,10 @@ interface BucketColumnProps {
   bucket: Bucket
   onOpenTask: (taskId: string) => void
 }
+
+// Distinct from the bucket's own id (which is the droppable zone for tasks dropped into it) —
+// this is the bucket-as-a-draggable-card's own identity, so the two don't collide in dnd-kit's registry.
+export const bucketSortableId = (bucketId: string) => `${bucketId}::bucket`
 
 export function BucketColumn({ bucket, onOpenTask }: BucketColumnProps) {
   const activeTasks = useStore(
@@ -33,10 +38,28 @@ export function BucketColumn({ bucket, onOpenTask }: BucketColumnProps) {
   const [editingName, setEditingName] = useState(false)
   const [name, setName] = useState(bucket.name)
   const [newTaskName, setNewTaskName] = useState('')
-  const { setNodeRef } = useDroppable({ id: bucket.id })
+  const { setNodeRef: setDroppableRef } = useDroppable({ id: bucket.id })
+  const {
+    attributes,
+    listeners,
+    setNodeRef: setSortableRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: bucketSortableId(bucket.id) })
 
   return (
-    <div className="flex w-64 flex-shrink-0 flex-col rounded-lg bg-gray-100 p-3 dark:bg-gray-800/60">
+    <div
+      ref={setSortableRef}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition: transition ?? undefined,
+        opacity: isDragging ? 0.4 : 1,
+      }}
+      {...attributes}
+      {...listeners}
+      className="flex w-64 flex-shrink-0 flex-col rounded-lg bg-gray-100 p-3 dark:bg-gray-800/60"
+    >
       <div className="mb-2 flex items-center justify-between">
         {editingName ? (
           <input
@@ -68,7 +91,7 @@ export function BucketColumn({ bucket, onOpenTask }: BucketColumnProps) {
         </button>
       </div>
 
-      <div ref={setNodeRef} className="flex min-h-[2.5rem] flex-col gap-2">
+      <div ref={setDroppableRef} className="flex min-h-[2.5rem] flex-col gap-2">
         <SortableContext items={activeTasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
           {activeTasks.map((task) => (
             <SortableTaskCardMini key={task.id} task={task} onClick={() => onOpenTask(task.id)} />
