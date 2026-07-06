@@ -39,6 +39,7 @@ interface AppState {
   startTimer: (taskId: string) => void
   pauseTimer: (taskId: string) => void
   resetTimer: (taskId: string) => void
+  setElapsedTime: (taskId: string, newElapsedSeconds: number) => void
 
   completeTask: (taskId: string) => void
   uncompleteTask: (taskId: string) => void
@@ -265,6 +266,30 @@ export const useStore = create<AppState>((set, get) => ({
     set((state) => ({ tasks: { ...state.tasks, [taskId]: updated } }))
     repo.putTask(updated)
     logActivity(taskId, task.name, 'timer-reset', updated.status)
+  },
+  setElapsedTime: (taskId, newElapsedSeconds) => {
+    const task = get().tasks[taskId]
+    if (!task) return
+
+    // If running, close out the real segment first — logged exactly as a normal pause would be —
+    // so the delta computed below is only the manual correction on top of genuinely tracked time.
+    let baseElapsed = task.timer.elapsedSeconds
+    if (task.timer.isRunning && task.timer.startedAt != null) {
+      const segmentStart = task.timer.startedAt
+      baseElapsed += (Date.now() - segmentStart) / 1000
+      logActivity(taskId, task.name, 'timer-pause', task.status, segmentStart)
+    }
+
+    const delta = newElapsedSeconds - baseElapsed
+    const updated: TaskCard = {
+      ...task,
+      timer: { isRunning: false, elapsedSeconds: newElapsedSeconds, startedAt: null },
+    }
+    set((state) => ({ tasks: { ...state.tasks, [taskId]: updated } }))
+    repo.putTask(updated)
+    if (delta !== 0) {
+      logActivity(taskId, task.name, 'manual-adjustment', updated.status, undefined, delta)
+    }
   },
 
   completeTask: (taskId) => {

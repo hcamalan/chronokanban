@@ -13,3 +13,20 @@ export function isLate(task: TaskCard, now: number = Date.now()): boolean {
   if (task.status === 'completed' || !task.dueDate) return false
   return new Date(`${task.dueDate}T23:59:59`).getTime() < now
 }
+
+/** Minute-precision H:MM for the editable "Time elapsed" field (unbounded hours). */
+export function formatHHMM(totalSeconds: number): string {
+  const totalMinutes = Math.round(Math.max(0, totalSeconds) / 60)
+  const h = Math.floor(totalMinutes / 60)
+  const m = totalMinutes % 60
+  return `${h}:${String(m).padStart(2, '0')}`
+}
+
+/** Strict H:MM parse to seconds, or null if invalid. No minus sign accepted, so this never returns negative. */
+export function parseHHMM(text: string): number | null {
+  const match = text.trim().match(/^(\d+):([0-5]?\d)$/)
+  if (!match) return null
+  const h = Number(match[1])
+  const m = Number(match[2])
+  return (h * 60 + m) * 60
+}

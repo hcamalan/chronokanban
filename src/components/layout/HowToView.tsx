@@ -25,6 +25,12 @@ export function HowToView() {
           pause. The elapsed time keeps counting even if you close the tab and come back later. To reset a task's
           time back to zero, open the task's extended view — it's the only place with a Reset control.
         </p>
+        <p className="mt-2">
+          Forgot to start or stop the timer? The extended view also has an editable{' '}
+          <strong>Time elapsed</strong> field (H:MM) — type in the correct total and it's applied
+          immediately. The difference is credited to today in the timesheet download, so your report stays
+          accurate even after a correction.
+        </p>
       </section>
 
       <section className="mb-6">

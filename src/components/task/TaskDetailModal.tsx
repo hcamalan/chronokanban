@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { useStore } from '../../store/useStore'
 import { CategoryPicker } from './CategoryPicker'
@@ -6,7 +6,7 @@ import { PlayPauseButton } from './PlayPauseButton'
 import { AttachmentList } from './AttachmentList'
 import { ConfirmDialog } from '../boards/ConfirmDialog'
 import { flushAllDebouncers } from '../../store/persist'
-import { formatDuration } from '../../utils/time'
+import { formatHHMM, parseHHMM } from '../../utils/time'
 import type { Urgency, Importance, TaskStatus } from '../../types'
 
 interface TaskDetailModalProps {
@@ -23,9 +23,21 @@ export function TaskDetailModal({ taskId, onClose }: TaskDetailModalProps) {
   const startTimer = useStore((s) => s.startTimer)
   const pauseTimer = useStore((s) => s.pauseTimer)
   const resetTimer = useStore((s) => s.resetTimer)
+  const setElapsedTime = useStore((s) => s.setElapsedTime)
   const completeTask = useStore((s) => s.completeTask)
   const uncompleteTask = useStore((s) => s.uncompleteTask)
   const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const [elapsedText, setElapsedText] = useState(() => formatHHMM(task?.timer.elapsedSeconds ?? 0))
+  const [elapsedFocused, setElapsedFocused] = useState(false)
+
+  // Re-sync the displayed text whenever the stored elapsed time changes (timer actions, or our own
+  // committed edits) — but never while the user is actively focused in the field, so it can't clobber
+  // an in-progress edit.
+  useEffect(() => {
+    if (!elapsedFocused && task) {
+      setElapsedText(formatHHMM(task.timer.elapsedSeconds))
+    }
+  }, [task?.timer.elapsedSeconds, elapsedFocused, task])
 
   if (!task) return null
 
@@ -34,6 +46,17 @@ export function TaskDetailModal({ taskId, onClose }: TaskDetailModalProps) {
   const handleClose = () => {
     flushAllDebouncers()
     onClose()
+  }
+
+  function commitElapsedTime() {
+    const currentDisplay = formatHHMM(task.timer.elapsedSeconds)
+    if (elapsedText === currentDisplay) return // untouched — don't disturb the timer or log anything
+    const parsed = parseHHMM(elapsedText)
+    if (parsed == null) {
+      setElapsedText(currentDisplay) // invalid — revert silently
+      return
+    }
+    setElapsedTime(taskId, parsed)
   }
 
   return (
@@ -71,26 +94,41 @@ export function TaskDetailModal({ taskId, onClose }: TaskDetailModalProps) {
           </button>
         </div>
 
-        <div className="mb-4 flex items-center gap-3">
-          {isCompleted ? (
-            <span className="font-mono text-sm text-gray-400 dark:text-gray-500">
-              {formatDuration(task.timer.elapsedSeconds)}
-            </span>
-          ) : (
-            <>
-              <PlayPauseButton
-                timer={task.timer}
-                onStart={() => startTimer(taskId)}
-                onPause={() => pauseTimer(taskId)}
-                size="md"
-              />
-              <button
-                onClick={() => resetTimer(taskId)}
-                className="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-              >
-                Reset
-              </button>
-            </>
+        <div className="mb-4 flex flex-wrap items-center gap-3">
+          {!isCompleted && (
+            <PlayPauseButton
+              timer={task.timer}
+              onStart={() => startTimer(taskId)}
+              onPause={() => pauseTimer(taskId)}
+              size="md"
+            />
+          )}
+          <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+            Time elapsed
+            <input
+              type="text"
+              inputMode="numeric"
+              placeholder="0:00"
+              value={elapsedText}
+              onChange={(e) => setElapsedText(e.target.value)}
+              onFocus={() => setElapsedFocused(true)}
+              onBlur={() => {
+                setElapsedFocused(false)
+                commitElapsedTime()
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') e.currentTarget.blur()
+              }}
+              className="w-16 rounded border border-gray-300 px-2 py-1 font-mono dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+            />
+          </label>
+          {!isCompleted && (
+            <button
+              onClick={() => resetTimer(taskId)}
+              className="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            >
+              Reset
+            </button>
           )}
         </div>
 

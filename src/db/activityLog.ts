@@ -13,6 +13,7 @@ export function logActivity(
   actionType: ActivityActionType,
   status: TaskStatus,
   segmentStart?: number,
+  adjustmentSeconds?: number,
 ) {
   const entry: ActivityLogEntry = {
     id: crypto.randomUUID(),
@@ -22,6 +23,7 @@ export function logActivity(
     timestamp: Date.now(),
     status,
     segmentStart,
+    adjustmentSeconds,
   }
   putActivityLogEntry(entry)
 }
@@ -119,6 +121,14 @@ export async function buildTimesheetCsv(runningIntervals: WorkInterval[]): Promi
         seconds,
         taskNames,
       )
+    } else if (e.actionType === 'manual-adjustment' && e.adjustmentSeconds != null) {
+      // Additive to whatever real segments already landed on this day — never rewrites them.
+      // Credited to the entry's own date (i.e. the day the edit was made), per the locked-in design.
+      taskNames.set(e.taskId, e.taskName)
+      const dateKey = localDateKey(e.timestamp)
+      const perTask = seconds.get(dateKey) ?? new Map<string, number>()
+      perTask.set(e.taskId, (perTask.get(e.taskId) ?? 0) + e.adjustmentSeconds)
+      seconds.set(dateKey, perTask)
     }
   }
   for (const interval of runningIntervals) {

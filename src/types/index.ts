@@ -70,6 +70,7 @@ export type ActivityActionType =
   | 'timer-pause'
   | 'timer-reset'
   | 'delete'
+  | 'manual-adjustment'
 
 export interface ActivityLogEntry {
   id: string
@@ -82,4 +83,6 @@ export interface ActivityLogEntry {
   status?: TaskStatus
   /** epoch ms a work segment began; set only on entries that CLOSE a segment (pause / complete-while-running) */
   segmentStart?: number
+  /** signed seconds delta from a manual "Time elapsed" edit; credited to this entry's own (today's) date */
+  adjustmentSeconds?: number
 }
