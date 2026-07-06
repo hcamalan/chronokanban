@@ -17,7 +17,7 @@ import {
   GROUP_BY_OPTIONS,
   UNIT_OPTIONS,
   STATUS_OPTIONS,
-  LEVEL_OPTIONS,
+  LEVEL_FILTER_OPTIONS,
   LATE_OPTIONS,
   UNIT_TOOLTIP_LABEL,
   UNCATEGORIZED,
@@ -25,7 +25,7 @@ import {
   type GroupByDim,
   type Unit,
 } from './chartData'
-import type { TaskCard, Category, TaskStatus, Urgency, Importance } from '../../types'
+import type { TaskCard, Category, TaskStatus } from '../../types'
 
 interface ConfigurableChartProps {
   tasks: TaskCard[]
@@ -120,15 +120,15 @@ export function ConfigurableChart({ tasks, categories, categoryEnabled }: Config
         )}
         <MultiSelectDropdown
           label="Importance"
-          options={LEVEL_OPTIONS}
+          options={LEVEL_FILTER_OPTIONS}
           selected={config.importances}
-          onChange={(v) => update('importances', v as Importance[])}
+          onChange={(v) => update('importances', v as ChartConfig['importances'])}
         />
         <MultiSelectDropdown
           label="Urgency"
-          options={LEVEL_OPTIONS}
+          options={LEVEL_FILTER_OPTIONS}
           selected={config.urgencies}
-          onChange={(v) => update('urgencies', v as Urgency[])}
+          onChange={(v) => update('urgencies', v as ChartConfig['urgencies'])}
         />
         <MultiSelectDropdown
           label="Late"

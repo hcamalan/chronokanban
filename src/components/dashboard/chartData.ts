@@ -1,5 +1,5 @@
 import { isLate } from '../../utils/time'
-import type { TaskCard, Category, TaskStatus, Urgency, Importance } from '../../types'
+import type { TaskCard, Category, TaskStatus } from '../../types'
 
 export type GroupByDim = 'category' | 'status' | 'importance' | 'urgency' | 'late'
 export type Unit = 'count' | 'time' | 'points'
@@ -8,14 +8,17 @@ type Lateness = 'late' | 'not-late'
 
 /** Sentinel category id for tasks with no category. */
 export const UNCATEGORIZED = '__uncat__'
+/** Sentinel level for tasks with no urgency/importance set. */
+export const NONE_LEVEL = '__none__'
+type LevelFilter = Level | typeof NONE_LEVEL
 
 export interface ChartConfig {
   groupBy: GroupByDim
   unit: Unit
   statuses: TaskStatus[]
   categoryIds: string[]
-  importances: Importance[]
-  urgencies: Urgency[]
+  importances: LevelFilter[]
+  urgencies: LevelFilter[]
   lateness: Lateness[]
 }
 
@@ -52,6 +55,12 @@ export const LEVEL_OPTIONS: { value: Level; label: string }[] = [
   { value: 'high', label: 'High' },
 ]
 
+/** Level options plus the "None" (unset) choice, for the Importance/Urgency filter dropdowns. */
+export const LEVEL_FILTER_OPTIONS: { value: LevelFilter; label: string }[] = [
+  ...LEVEL_OPTIONS,
+  { value: NONE_LEVEL, label: 'None' },
+]
+
 export const LATE_OPTIONS: { value: Lateness; label: string }[] = [
   { value: 'late', label: 'Yes' },
   { value: 'not-late', label: 'No' },
@@ -73,6 +82,7 @@ const STATUS_COLORS: Record<TaskStatus, string> = {
 const LEVEL_COLORS: Record<Level, string> = { low: '#22c55e', medium: '#f59e0b', high: '#ef4444' }
 const LATE_COLORS: Record<Lateness, string> = { late: '#ef4444', 'not-late': '#22c55e' }
 const UNCATEGORIZED_COLOR = '#9ca3af'
+const NONE_LEVEL_COLOR = '#9ca3af'
 
 function taskSeconds(t: TaskCard, now: number): number {
   return t.timer.elapsedSeconds + (t.timer.isRunning && t.timer.startedAt != null ? (now - t.timer.startedAt) / 1000 : 0)
@@ -86,8 +96,8 @@ function measure(t: TaskCard, unit: Unit, now: number): number {
 
 function passesFilters(t: TaskCard, config: ChartConfig): boolean {
   if (config.statuses.length && !config.statuses.includes(t.status)) return false
-  if (config.importances.length && !config.importances.includes(t.importance)) return false
-  if (config.urgencies.length && !config.urgencies.includes(t.urgency)) return false
+  if (config.importances.length && !config.importances.includes(t.importance ?? NONE_LEVEL)) return false
+  if (config.urgencies.length && !config.urgencies.includes(t.urgency ?? NONE_LEVEL)) return false
   if (config.lateness.length && !config.lateness.includes(isLate(t) ? 'late' : 'not-late')) return false
   if (config.categoryIds.length && !config.categoryIds.includes(t.categoryId ?? UNCATEGORIZED)) return false
   return true
@@ -98,9 +108,9 @@ function groupKey(t: TaskCard, dim: GroupByDim): string {
     case 'status':
       return t.status
     case 'importance':
-      return t.importance
+      return t.importance ?? NONE_LEVEL
     case 'urgency':
-      return t.urgency
+      return t.urgency ?? NONE_LEVEL
     case 'late':
       return isLate(t) ? 'late' : 'not-late'
     case 'category':
@@ -115,7 +125,10 @@ function bucketsForDim(dim: GroupByDim, categories: Category[]): { key: string; 
       return STATUS_OPTIONS.map((o) => ({ key: o.value, label: o.label, color: STATUS_COLORS[o.value] }))
     case 'importance':
     case 'urgency':
-      return LEVEL_OPTIONS.map((o) => ({ key: o.value, label: o.label, color: LEVEL_COLORS[o.value] }))
+      return [
+        ...LEVEL_OPTIONS.map((o) => ({ key: o.value, label: o.label, color: LEVEL_COLORS[o.value] })),
+        { key: NONE_LEVEL, label: 'None', color: NONE_LEVEL_COLOR },
+      ]
     case 'late':
       return LATE_OPTIONS.map((o) => ({ key: o.value, label: o.label, color: LATE_COLORS[o.value] }))
     case 'category':

@@ -11,7 +11,7 @@ interface PlayPauseButtonProps {
 
 export function PlayPauseButton({ timer, onStart, onPause, size = 'sm' }: PlayPauseButtonProps) {
   const elapsed = useElapsedTime(timer)
-  const buttonSize = size === 'sm' ? 'h-6 w-6 text-xs' : 'h-9 w-9 text-base'
+  const glyphSize = size === 'sm' ? 'text-base' : 'text-xl'
   const textSize = size === 'sm' ? 'text-xs' : 'text-sm'
 
   return (
@@ -20,7 +20,7 @@ export function PlayPauseButton({ timer, onStart, onPause, size = 'sm' }: PlayPa
         type="button"
         onClick={() => (timer.isRunning ? onPause() : onStart())}
         aria-label={timer.isRunning ? 'Pause timer' : 'Start timer'}
-        className={`flex flex-shrink-0 items-center justify-center rounded-full bg-gray-900 text-white hover:bg-gray-700 dark:bg-gray-100 dark:text-gray-900 ${buttonSize}`}
+        className={`flex flex-shrink-0 items-center justify-center leading-none text-gray-900 hover:text-gray-600 dark:text-gray-100 dark:hover:text-gray-400 ${glyphSize}`}
       >
         {timer.isRunning ? '❚❚' : '▶'}
       </button>

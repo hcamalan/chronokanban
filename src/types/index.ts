@@ -40,8 +40,8 @@ export interface TaskCard {
   status: TaskStatus
   assignedTo: string
   dueDate: string | null
-  urgency: Urgency
-  importance: Importance
+  urgency: Urgency | null
+  importance: Importance | null
   description: string
   storyPoints: number | null
   /** position within its bucket */

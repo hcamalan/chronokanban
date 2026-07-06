@@ -235,10 +235,11 @@ export function TaskDetailModal({ taskId, onClose }: TaskDetailModalProps) {
           <label className="flex flex-col gap-1 text-sm text-gray-600 dark:text-gray-300">
             Urgency
             <select
-              value={task.urgency}
-              onChange={(e) => updateTask(taskId, { urgency: e.target.value as Urgency })}
+              value={task.urgency ?? ''}
+              onChange={(e) => updateTask(taskId, { urgency: e.target.value === '' ? null : (e.target.value as Urgency) })}
               className="rounded border border-gray-300 px-2 py-1 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
             >
+              <option value="">—</option>
               <option value="low">Low</option>
               <option value="medium">Medium</option>
               <option value="high">High</option>
@@ -248,10 +249,13 @@ export function TaskDetailModal({ taskId, onClose }: TaskDetailModalProps) {
           <label className="flex flex-col gap-1 text-sm text-gray-600 dark:text-gray-300">
             Importance
             <select
-              value={task.importance}
-              onChange={(e) => updateTask(taskId, { importance: e.target.value as Importance })}
+              value={task.importance ?? ''}
+              onChange={(e) =>
+                updateTask(taskId, { importance: e.target.value === '' ? null : (e.target.value as Importance) })
+              }
               className="rounded border border-gray-300 px-2 py-1 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
             >
+              <option value="">—</option>
               <option value="low">Low</option>
               <option value="medium">Medium</option>
               <option value="high">High</option>

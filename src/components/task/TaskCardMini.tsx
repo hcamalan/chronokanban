@@ -1,4 +1,4 @@
-import type { TaskCard, Urgency } from '../../types'
+import type { TaskCard } from '../../types'
 import { useStore } from '../../store/useStore'
 import { PlayPauseButton } from './PlayPauseButton'
 import { formatDuration } from '../../utils/time'
@@ -8,11 +8,7 @@ interface TaskCardMiniProps {
   onClick: () => void
 }
 
-const urgencyColor: Record<Urgency, string> = {
-  low: 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
-  medium: 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200',
-  high: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200',
-}
+const highTagClass = 'rounded-full bg-red-100 px-1.5 py-0.5 font-semibold text-red-700 dark:bg-red-900 dark:text-red-200'
 
 export function TaskCardMini({ task, onClick }: TaskCardMiniProps) {
   const category = useStore((s) => (task.categoryId ? s.categories[task.categoryId] : undefined))
@@ -61,7 +57,8 @@ export function TaskCardMini({ task, onClick }: TaskCardMiniProps) {
             {task.dueDate}
           </span>
         )}
-        <span className={`rounded-full px-1.5 py-0.5 ${urgencyColor[task.urgency]}`}>{task.urgency}</span>
+        {task.urgency === 'high' && <span className={highTagClass}>U</span>}
+        {task.importance === 'high' && <span className={highTagClass}>I</span>}
       </div>
       {isCompleted ? (
         <span className="font-mono text-xs text-gray-400 dark:text-gray-500">
