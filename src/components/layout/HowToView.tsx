@@ -48,10 +48,13 @@ export function HowToView() {
       <section className="mb-6">
         <h2 className="mb-2 text-lg font-medium text-gray-900 dark:text-gray-100">The Dashboard</h2>
         <p>
-          The Dashboard tab shows analytics: completed and incomplete tasks by category, time spent by category,
-          late (overdue, unfinished) tasks, and two effectiveness numbers — your on-time completion rate and story
-          points completed per hour tracked. Pick a specific board from the dropdown to see its category
-          breakdowns; late tasks and effectiveness are also available across all boards combined.
+          The Dashboard tab shows analytics: two effectiveness numbers (your on-time completion rate and story
+          points completed per hour tracked), a list of late (overdue, unfinished) tasks, and a configurable
+          chart. In that chart you choose what to <strong>measure</strong> (number of tasks, time spent, or story
+          points), what to <strong>group by</strong> (category, status, importance, urgency, or late), and which
+          tasks to include via the filter dropdowns — then view it as a bar or pie chart. Pick a specific board
+          from the dropdown to break down by category; grouping by status/urgency/importance/late also works
+          across all boards combined.
         </p>
         <p className="mt-2">
           <strong>Download logs</strong> exports a CSV timesheet: one row per day and task you tracked time on,
