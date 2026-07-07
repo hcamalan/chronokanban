@@ -5,6 +5,7 @@ import { BoardFilterSelect } from './BoardFilterSelect'
 import { ConfigurableChart } from './ConfigurableChart'
 import { LateTasksList } from './LateTasksList'
 import { EffectivenessTiles } from './EffectivenessTiles'
+import { CalendarView } from './CalendarView'
 
 interface DashboardViewProps {
   onOpenTask: (taskId: string) => void
@@ -42,10 +43,12 @@ export function DashboardView({ onOpenTask }: DashboardViewProps) {
         <ConfigurableChart tasks={scopedTasks} categories={boardCategories} categoryEnabled={scope !== 'all'} />
       </div>
 
-      <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
+      <div className="mb-6 rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
         <h3 className="mb-2 text-sm font-medium text-gray-500 dark:text-gray-400">Late tasks</h3>
         <LateTasksList tasks={scopedTasks} onOpenTask={onOpenTask} />
       </div>
+
+      <CalendarView tasks={scopedTasks} onOpenTask={onOpenTask} />
     </div>
   )
 }

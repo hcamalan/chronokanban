@@ -103,14 +103,14 @@ function statusAtEndOfDay(taskEntries: ActivityLogEntry[], dateKey: string): str
   return latest?.status ? STATUS_LABELS[latest.status] : ''
 }
 
-/**
- * Builds a daily timesheet: one row per (local date, task) that had tracked time that day.
- * `runningIntervals` are virtual segments for timers still running at export time (so today's
- * in-progress work counts).
- */
-export async function buildTimesheetCsv(runningIntervals: WorkInterval[]): Promise<string> {
-  const entries = await getAllActivityLog()
+export interface DailyWorkSummary {
+  /** dateKey (YYYY-MM-DD) -> taskId -> seconds worked that day */
+  seconds: Map<string, Map<string, number>>
+  /** taskId -> denormalized task name (survives task deletion) */
+  taskNames: Map<string, string>
+}
 
+function summarizeEntries(entries: ActivityLogEntry[], runningIntervals: WorkInterval[]): DailyWorkSummary {
   const seconds = new Map<string, Map<string, number>>()
   const taskNames = new Map<string, string>()
 
@@ -134,6 +134,28 @@ export async function buildTimesheetCsv(runningIntervals: WorkInterval[]): Promi
   for (const interval of runningIntervals) {
     accumulateInterval(interval, seconds, taskNames)
   }
+
+  return { seconds, taskNames }
+}
+
+/**
+ * Builds a day-by-task breakdown of tracked time, splitting sessions at local midnight and
+ * crediting manual adjustments to their own day. `runningIntervals` are virtual segments for
+ * timers still running right now (so today's in-progress work counts before it's paused).
+ */
+export async function buildDailyWorkSummary(runningIntervals: WorkInterval[]): Promise<DailyWorkSummary> {
+  const entries = await getAllActivityLog()
+  return summarizeEntries(entries, runningIntervals)
+}
+
+/**
+ * Builds a daily timesheet: one row per (local date, task) that had tracked time that day.
+ * `runningIntervals` are virtual segments for timers still running at export time (so today's
+ * in-progress work counts).
+ */
+export async function buildTimesheetCsv(runningIntervals: WorkInterval[]): Promise<string> {
+  const entries = await getAllActivityLog()
+  const { seconds, taskNames } = summarizeEntries(entries, runningIntervals)
 
   const entriesByTask = new Map<string, ActivityLogEntry[]>()
   for (const e of entries) {
