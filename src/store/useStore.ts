@@ -70,6 +70,7 @@ interface AppState {
 
   exportData: () => Promise<void>
   downloadActivityLog: () => Promise<void>
+  deleteAllData: () => Promise<void>
 }
 
 export const useStore = create<AppState>((set, get) => {
@@ -666,6 +667,12 @@ export const useStore = create<AppState>((set, get) => {
       .filter((t) => t.timer.isRunning && t.timer.startedAt != null)
       .map((t) => ({ taskId: t.id, taskName: t.name, start: t.timer.startedAt as number, end: now }))
     await downloadTimesheetCsv(runningIntervals)
+  },
+  deleteAllData: async () => {
+    const pending = get().pendingDeletion
+    if (pending) clearTimeout(pending.timeoutId)
+    await repo.clearAllData()
+    set({ boards: {}, buckets: {}, tasks: {}, categories: {}, pendingDeletion: null })
   },
   }
 })

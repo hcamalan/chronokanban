@@ -101,6 +101,15 @@ export async function deleteActivityLogEntry(id: string) {
   await db.delete('activityLog', id)
 }
 
+const ALL_STORE_NAMES = ['boards', 'buckets', 'tasks', 'categories', 'attachments', 'activityLog'] as const
+
+export async function clearAllData() {
+  const db = await getDB()
+  const tx = db.transaction(ALL_STORE_NAMES, 'readwrite')
+  await Promise.all(ALL_STORE_NAMES.map((name) => tx.objectStore(name).clear()))
+  await tx.done
+}
+
 export async function bulkPutAll(data: {
   boards: Board[]
   buckets: Bucket[]

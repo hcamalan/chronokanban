@@ -35,6 +35,15 @@ export function HowToView() {
         account, no server, and nothing is ever sent anywhere. Your data lives only on this device.
       </p>
 
+      <p className="mb-6">
+        ChronoKanban is built for individual use, not for coordinating a team. Because all data lives only in your
+        own browser with nothing shared or synced, there's no practical way for multiple people to see or work
+        from the same board — trying to use it as a team's shared tracker won't work the way a server-backed tool
+        would. The <strong>Assignee</strong> field on task cards is still there, though — not as a step toward
+        team features, but simply to give you the flexibility to use it however suits you, even on a personal
+        board.
+      </p>
+
       <section className="mb-8">
         <h2 className="mb-3 text-lg font-semibold text-gray-900 dark:text-gray-100">Use cases</h2>
         <ul className="list-disc space-y-3 pl-5">

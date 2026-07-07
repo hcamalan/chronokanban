@@ -129,7 +129,7 @@ export function TopNav({ activeTab, onNavigate, hotkeysOpen, onHotkeysOpenChange
           className="hidden"
         />
         <HotkeysPanel open={hotkeysOpen} onOpenChange={onHotkeysOpenChange} />
-        <SettingsPanel />
+        <SettingsPanel onDataDeleted={() => onNavigate('boards')} />
       </div>
 
       {importFlow && (

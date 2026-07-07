@@ -1,8 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { useStore } from '../../store/useStore'
 import { DarkModeToggle } from './DarkModeToggle'
+import { ConfirmDialog } from '../boards/ConfirmDialog'
 import { BUCKET_WIDTH_OPTIONS } from '../../utils/bucketWidth'
 import type { DateFormat, ColorMode } from '../../types'
+
+interface SettingsPanelProps {
+  onDataDeleted: () => void
+}
 
 const DATE_FORMAT_OPTIONS: { value: DateFormat; label: string }[] = [
   { value: 'DD/MM', label: 'DD/MM (05/03)' },
@@ -20,11 +25,13 @@ const COLOR_MODE_OPTIONS: { value: ColorMode; label: string }[] = [
 const selectClass =
   'rounded border border-gray-300 px-2 py-1 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100'
 
-export function SettingsPanel() {
+export function SettingsPanel({ onDataDeleted }: SettingsPanelProps) {
   const [open, setOpen] = useState(false)
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   const preferences = useStore((s) => s.preferences)
   const setPreference = useStore((s) => s.setPreference)
+  const deleteAllData = useStore((s) => s.deleteAllData)
 
   useEffect(() => {
     if (!open) return
@@ -107,7 +114,32 @@ export function SettingsPanel() {
             />
             Show description on card
           </label>
+
+          <div className="mt-3 border-t border-gray-200 pt-3 dark:border-gray-700">
+            <button
+              onClick={() => {
+                setOpen(false)
+                setConfirmingDelete(true)
+              }}
+              className="w-full rounded px-1 py-1 text-left text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950"
+            >
+              Delete all my data
+            </button>
+          </div>
         </div>
+      )}
+
+      {confirmingDelete && (
+        <ConfirmDialog
+          message="This permanently deletes every board, bucket, task, and category stored in this browser. This cannot be undone — if you haven't already, back up your data first with Export. Are you sure?"
+          confirmLabel="Delete everything"
+          onCancel={() => setConfirmingDelete(false)}
+          onConfirm={async () => {
+            await deleteAllData()
+            setConfirmingDelete(false)
+            onDataDeleted()
+          }}
+        />
       )}
     </div>
   )
