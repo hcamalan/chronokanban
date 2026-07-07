@@ -43,6 +43,19 @@ export interface TimerState {
   startedAt: number | null
 }
 
+export interface Subtask {
+  id: string
+  text: string
+  done: boolean
+}
+
+export type RecurrenceUnit = 'day' | 'week' | 'month'
+
+export interface Recurrence {
+  interval: number
+  unit: RecurrenceUnit
+}
+
 export interface TaskCard {
   id: string
   boardId: string
@@ -56,6 +69,8 @@ export interface TaskCard {
   importance: Importance | null
   description: string
   storyPoints: number | null
+  subtasks: Subtask[]
+  recurrence: Recurrence | null
   /** position within its bucket */
   order: number
   timer: TimerState

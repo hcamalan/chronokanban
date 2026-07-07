@@ -9,9 +9,17 @@ interface SortableBoardCardProps {
   onOpen: () => void
   onRename: (name: string) => void
   onDeleteRequest: () => void
+  onDuplicate: () => void
 }
 
-export function SortableBoardCard({ board, taskCount, onOpen, onRename, onDeleteRequest }: SortableBoardCardProps) {
+export function SortableBoardCard({
+  board,
+  taskCount,
+  onOpen,
+  onRename,
+  onDeleteRequest,
+  onDuplicate,
+}: SortableBoardCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: board.id })
 
   return (
@@ -31,6 +39,7 @@ export function SortableBoardCard({ board, taskCount, onOpen, onRename, onDelete
         onOpen={onOpen}
         onRename={onRename}
         onDeleteRequest={onDeleteRequest}
+        onDuplicate={onDuplicate}
       />
     </div>
   )

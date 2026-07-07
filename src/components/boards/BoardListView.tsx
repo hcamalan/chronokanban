@@ -23,6 +23,7 @@ export function BoardListView({ onOpenBoard }: BoardListViewProps) {
   const addBoard = useStore((s) => s.addBoard)
   const renameBoard = useStore((s) => s.renameBoard)
   const deleteBoard = useStore((s) => s.deleteBoard)
+  const duplicateBoard = useStore((s) => s.duplicateBoard)
   const reorderBoards = useStore((s) => s.reorderBoards)
   const [newName, setNewName] = useState('')
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
@@ -55,6 +56,7 @@ export function BoardListView({ onOpenBoard }: BoardListViewProps) {
                 onOpen={() => onOpenBoard(board.id)}
                 onRename={(name) => renameBoard(board.id, name)}
                 onDeleteRequest={() => setPendingDeleteId(board.id)}
+                onDuplicate={() => duplicateBoard(board.id)}
               />
             ))}
             <form

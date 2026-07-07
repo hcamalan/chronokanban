@@ -6,9 +6,18 @@ import type { TaskCard } from '../../types'
 interface SortableTaskCardMiniProps {
   task: TaskCard
   onClick: () => void
+  selectMode?: boolean
+  selected?: boolean
+  onToggleSelect?: () => void
 }
 
-export function SortableTaskCardMini({ task, onClick }: SortableTaskCardMiniProps) {
+export function SortableTaskCardMini({
+  task,
+  onClick,
+  selectMode,
+  selected,
+  onToggleSelect,
+}: SortableTaskCardMiniProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: task.id,
   })
@@ -24,7 +33,13 @@ export function SortableTaskCardMini({ task, onClick }: SortableTaskCardMiniProp
       {...attributes}
       {...listeners}
     >
-      <TaskCardMini task={task} onClick={onClick} />
+      <TaskCardMini
+        task={task}
+        onClick={onClick}
+        selectMode={selectMode}
+        selected={selected}
+        onToggleSelect={onToggleSelect}
+      />
     </div>
   )
 }

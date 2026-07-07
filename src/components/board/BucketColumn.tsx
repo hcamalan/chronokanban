@@ -4,6 +4,7 @@ import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useStore } from '../../store/useStore'
+import { useMediaQuery } from '../../hooks/useMediaQuery'
 import { SortableTaskCardMini } from '../task/SortableTaskCardMini'
 import { CompletedSection } from './CompletedSection'
 import { bucketWidthClass } from '../../utils/bucketWidth'
@@ -12,24 +13,40 @@ import type { Bucket } from '../../types'
 interface BucketColumnProps {
   bucket: Bucket
   onOpenTask: (taskId: string) => void
+  searchQuery: string
+  selectMode: boolean
+  selectedTaskIds: Set<string>
+  onToggleSelect: (taskId: string) => void
 }
 
 // Distinct from the bucket's own id (which is the droppable zone for tasks dropped into it) —
 // this is the bucket-as-a-draggable-card's own identity, so the two don't collide in dnd-kit's registry.
 export const bucketSortableId = (bucketId: string) => `${bucketId}::bucket`
 
-export function BucketColumn({ bucket, onOpenTask }: BucketColumnProps) {
+export function BucketColumn({
+  bucket,
+  onOpenTask,
+  searchQuery,
+  selectMode,
+  selectedTaskIds,
+  onToggleSelect,
+}: BucketColumnProps) {
+  const query = searchQuery.trim().toLowerCase()
   const activeTasks = useStore(
     useShallow((s) =>
       Object.values(s.tasks)
-        .filter((t) => t.bucketId === bucket.id && t.status !== 'completed')
+        .filter(
+          (t) => t.bucketId === bucket.id && t.status !== 'completed' && t.name.toLowerCase().includes(query),
+        )
         .sort((a, b) => a.order - b.order),
     ),
   )
   const completedTasks = useStore(
     useShallow((s) =>
       Object.values(s.tasks)
-        .filter((t) => t.bucketId === bucket.id && t.status === 'completed')
+        .filter(
+          (t) => t.bucketId === bucket.id && t.status === 'completed' && t.name.toLowerCase().includes(query),
+        )
         .sort((a, b) => a.order - b.order),
     ),
   )
@@ -37,6 +54,7 @@ export function BucketColumn({ bucket, onOpenTask }: BucketColumnProps) {
   const deleteBucket = useStore((s) => s.deleteBucket)
   const addTask = useStore((s) => s.addTask)
   const bucketWidth = useStore((s) => s.preferences.bucketWidth)
+  const isDesktop = useMediaQuery('(min-width: 768px)')
   const [editingName, setEditingName] = useState(false)
   const [name, setName] = useState(bucket.name)
   const [newTaskName, setNewTaskName] = useState('')
@@ -60,7 +78,7 @@ export function BucketColumn({ bucket, onOpenTask }: BucketColumnProps) {
       }}
       {...attributes}
       {...listeners}
-      className={`flex ${bucketWidthClass(bucketWidth)} flex-shrink-0 flex-col rounded-lg bg-gray-100 p-3 dark:bg-gray-800/60`}
+      className={`flex ${isDesktop ? bucketWidthClass(bucketWidth) : 'w-full'} flex-shrink-0 flex-col rounded-lg bg-gray-100 p-3 dark:bg-gray-800/60`}
     >
       <div className="mb-2 flex items-center justify-between">
         {editingName ? (
@@ -96,7 +114,14 @@ export function BucketColumn({ bucket, onOpenTask }: BucketColumnProps) {
       <div ref={setDroppableRef} className="flex min-h-[2.5rem] flex-col gap-2">
         <SortableContext items={activeTasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
           {activeTasks.map((task) => (
-            <SortableTaskCardMini key={task.id} task={task} onClick={() => onOpenTask(task.id)} />
+            <SortableTaskCardMini
+              key={task.id}
+              task={task}
+              onClick={() => onOpenTask(task.id)}
+              selectMode={selectMode}
+              selected={selectedTaskIds.has(task.id)}
+              onToggleSelect={() => onToggleSelect(task.id)}
+            />
           ))}
         </SortableContext>
       </div>

@@ -4,6 +4,7 @@ import { TopNav } from './components/layout/TopNav'
 import { HowToView } from './components/layout/HowToView'
 import { AboutView } from './components/layout/AboutView'
 import { Footer } from './components/layout/Footer'
+import { UndoToast } from './components/layout/UndoToast'
 import { BoardListView } from './components/boards/BoardListView'
 import { BoardDetailView } from './components/board/BoardDetailView'
 import { DashboardView } from './components/dashboard/DashboardView'
@@ -30,6 +31,28 @@ function App() {
   useEffect(() => {
     document.documentElement.classList.toggle('dark', darkMode)
   }, [darkMode])
+
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      const tag = (document.activeElement as HTMLElement | null)?.tagName
+      const isTyping = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT'
+
+      if (e.key === 'Escape') {
+        setSelectedTaskId(null)
+        return
+      }
+      if (isTyping) return
+      if (e.key === '/') {
+        const search = document.getElementById('task-search-input')
+        if (search) {
+          e.preventDefault()
+          search.focus()
+        }
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [])
 
   if (!loaded) {
     return <div className="p-6 text-gray-500 dark:text-gray-400">Loading...</div>
@@ -62,6 +85,7 @@ function App() {
       {selectedTaskId && (
         <TaskDetailModal taskId={selectedTaskId} onClose={() => setSelectedTaskId(null)} />
       )}
+      <UndoToast />
     </div>
   )
 }

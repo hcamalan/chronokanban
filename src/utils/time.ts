@@ -1,4 +1,4 @@
-import type { TaskCard, DateFormat } from '../types'
+import type { TaskCard, DateFormat, RecurrenceUnit } from '../types'
 
 export function formatDuration(totalSeconds: number): string {
   const seconds = Math.max(0, Math.floor(totalSeconds))
@@ -29,6 +29,17 @@ export function formatDate(dateStr: string, format: DateFormat): string {
     case 'YYYY-MM-DD':
       return `${y}-${m}-${d}`
   }
+}
+
+/** Advances a YYYY-MM-DD date string by the given recurrence interval. Uses noon UTC to avoid DST/timezone edge cases. */
+export function addToDateString(dateStr: string, interval: number, unit: RecurrenceUnit): string {
+  const [y, m, d] = dateStr.split('-').map(Number)
+  const date = new Date(Date.UTC(y, m - 1, d, 12))
+  if (unit === 'day') date.setUTCDate(date.getUTCDate() + interval)
+  else if (unit === 'week') date.setUTCDate(date.getUTCDate() + interval * 7)
+  else date.setUTCMonth(date.getUTCMonth() + interval)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())}`
 }
 
 /** Minute-precision H:MM for the editable "Time elapsed" field (unbounded hours). */

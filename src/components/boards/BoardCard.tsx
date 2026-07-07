@@ -7,9 +7,10 @@ interface BoardCardProps {
   onOpen: () => void
   onRename: (name: string) => void
   onDeleteRequest: () => void
+  onDuplicate: () => void
 }
 
-export function BoardCard({ board, taskCount, onOpen, onRename, onDeleteRequest }: BoardCardProps) {
+export function BoardCard({ board, taskCount, onOpen, onRename, onDeleteRequest, onDuplicate }: BoardCardProps) {
   const [editing, setEditing] = useState(false)
   const [name, setName] = useState(board.name)
 
@@ -43,13 +44,14 @@ export function BoardCard({ board, taskCount, onOpen, onRename, onDeleteRequest 
         <span>
           {taskCount} task{taskCount === 1 ? '' : 's'}
         </span>
-        <button
-          onClick={onDeleteRequest}
-          className="opacity-0 hover:text-red-500 group-hover:opacity-100"
-          aria-label={`Delete board ${board.name}`}
-        >
-          Delete
-        </button>
+        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100">
+          <button onClick={onDuplicate} className="hover:text-gray-700 dark:hover:text-gray-200" aria-label={`Duplicate board ${board.name}`}>
+            Duplicate
+          </button>
+          <button onClick={onDeleteRequest} className="hover:text-red-500" aria-label={`Delete board ${board.name}`}>
+            Delete
+          </button>
+        </div>
       </div>
     </div>
   )

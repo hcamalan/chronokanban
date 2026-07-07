@@ -4,7 +4,15 @@ import { buildExportFile, downloadExportFile } from '../db/exportImport'
 import { logActivity, downloadTimesheetCsv, type WorkInterval } from '../db/activityLog'
 import { createDebouncer } from './persist'
 import { loadPreferences, savePreferences } from './preferencesStorage'
+import { addToDateString } from '../utils/time'
 import type { Board, Bucket, TaskCard, Category, Preferences } from '../types'
+
+interface PendingDeletion {
+  label: string
+  timeoutId: ReturnType<typeof setTimeout>
+  commit: () => void
+  restore: () => void
+}
 
 const debouncedPutTask = createDebouncer((task: TaskCard) => {
   repo.putTask(task)
@@ -21,14 +29,17 @@ interface AppState {
   categories: Record<string, Category>
   loaded: boolean
   preferences: Preferences
+  pendingDeletion: PendingDeletion | null
 
   loadFromDB: () => Promise<void>
   setPreference: <K extends keyof Preferences>(key: K, value: Preferences[K]) => void
+  undoDelete: () => void
 
   addBoard: (name: string) => string
   renameBoard: (id: string, name: string) => void
   deleteBoard: (id: string) => void
   reorderBoards: (orderedIds: string[]) => void
+  duplicateBoard: (id: string) => string | undefined
 
   addBucket: (boardId: string, name: string) => string
   renameBucket: (id: string, name: string) => void
@@ -39,6 +50,8 @@ interface AppState {
   addTaskAtTop: (boardId: string, bucketId: string) => string
   updateTask: (id: string, patch: Partial<TaskCard>) => void
   deleteTask: (id: string) => void
+  deleteTasksWithUndo: (ids: string[]) => void
+  duplicateTask: (id: string) => string | undefined
   moveTask: (taskId: string, toBucketId: string, toIndex: number) => void
   moveTaskToBoard: (taskId: string, newBoardId: string) => void
 
@@ -58,18 +71,35 @@ interface AppState {
   downloadActivityLog: () => Promise<void>
 }
 
-export const useStore = create<AppState>((set, get) => ({
+export const useStore = create<AppState>((set, get) => {
+  function finalizePendingDeletion() {
+    const pending = get().pendingDeletion
+    if (!pending) return
+    clearTimeout(pending.timeoutId)
+    pending.commit()
+    set({ pendingDeletion: null })
+  }
+
+  return {
   boards: {},
   buckets: {},
   tasks: {},
   categories: {},
   loaded: false,
   preferences: loadPreferences(),
+  pendingDeletion: null,
 
   setPreference: (key, value) => {
     const preferences = { ...get().preferences, [key]: value }
     set({ preferences })
     savePreferences(preferences)
+  },
+  undoDelete: () => {
+    const pending = get().pendingDeletion
+    if (!pending) return
+    clearTimeout(pending.timeoutId)
+    pending.restore()
+    set({ pendingDeletion: null })
   },
 
   loadFromDB: async () => {
@@ -105,7 +135,12 @@ export const useStore = create<AppState>((set, get) => ({
     debouncedPutBoard(id, () => get().boards[id])
   },
   deleteBoard: (id) => {
+    const board = get().boards[id]
+    if (!board) return
+    finalizePendingDeletion()
+    const affectedBuckets = Object.values(get().buckets).filter((b) => b.boardId === id)
     const affectedTasks = Object.values(get().tasks).filter((t) => t.boardId === id)
+    const affectedCategories = Object.values(get().categories).filter((c) => c.boardId === id)
     set((state) => {
       const boards = { ...state.boards }
       delete boards[id]
@@ -114,8 +149,28 @@ export const useStore = create<AppState>((set, get) => ({
       const categories = Object.fromEntries(Object.entries(state.categories).filter(([, c]) => c.boardId !== id))
       return { boards, buckets, tasks, categories }
     })
-    repo.deleteBoardCascade(id)
-    for (const t of affectedTasks) logActivity(t.id, t.name, 'delete', t.status)
+    const commit = () => {
+      repo.deleteBoardCascade(id)
+      for (const t of affectedTasks) logActivity(t.id, t.name, 'delete', t.status)
+    }
+    const timeoutId = setTimeout(() => {
+      commit()
+      set({ pendingDeletion: null })
+    }, 6000)
+    set({
+      pendingDeletion: {
+        label: `"${board.name}" deleted`,
+        timeoutId,
+        commit,
+        restore: () =>
+          set((state) => ({
+            boards: { ...state.boards, [id]: board },
+            buckets: { ...state.buckets, ...Object.fromEntries(affectedBuckets.map((b) => [b.id, b])) },
+            tasks: { ...state.tasks, ...Object.fromEntries(affectedTasks.map((t) => [t.id, t])) },
+            categories: { ...state.categories, ...Object.fromEntries(affectedCategories.map((c) => [c.id, c])) },
+          })),
+      },
+    })
   },
   reorderBoards: (orderedIds) => {
     const updates: Record<string, Board> = {}
@@ -126,6 +181,60 @@ export const useStore = create<AppState>((set, get) => ({
     if (Object.keys(updates).length === 0) return
     set((state) => ({ boards: { ...state.boards, ...updates } }))
     Object.values(updates).forEach((b) => repo.putBoard(b))
+  },
+  duplicateBoard: (id) => {
+    const board = get().boards[id]
+    if (!board) return
+    const newBoardId = crypto.randomUUID()
+    const newBoard: Board = {
+      ...board,
+      id: newBoardId,
+      name: `${board.name} (copy)`,
+      order: Object.keys(get().boards).length,
+      createdAt: Date.now(),
+    }
+
+    const oldBuckets = Object.values(get().buckets).filter((b) => b.boardId === id)
+    const bucketIdMap = new Map<string, string>()
+    const newBuckets: Bucket[] = oldBuckets.map((b) => {
+      const newId = crypto.randomUUID()
+      bucketIdMap.set(b.id, newId)
+      return { ...b, id: newId, boardId: newBoardId }
+    })
+
+    const oldCategories = Object.values(get().categories).filter((c) => c.boardId === id)
+    const categoryIdMap = new Map<string, string>()
+    const newCategories: Category[] = oldCategories.map((c) => {
+      const newId = crypto.randomUUID()
+      categoryIdMap.set(c.id, newId)
+      return { ...c, id: newId, boardId: newBoardId }
+    })
+
+    const oldTasks = Object.values(get().tasks).filter((t) => t.boardId === id)
+    const newTasks: TaskCard[] = oldTasks.map((t) => ({
+      ...t,
+      id: crypto.randomUUID(),
+      boardId: newBoardId,
+      bucketId: bucketIdMap.get(t.bucketId) ?? t.bucketId,
+      categoryId: t.categoryId ? (categoryIdMap.get(t.categoryId) ?? null) : null,
+      status: 'not-started',
+      completedAt: null,
+      timer: { isRunning: false, elapsedSeconds: 0, startedAt: null },
+      createdAt: Date.now(),
+      subtasks: t.subtasks.map((s) => ({ ...s, id: crypto.randomUUID() })),
+    }))
+
+    set((state) => ({
+      boards: { ...state.boards, [newBoardId]: newBoard },
+      buckets: { ...state.buckets, ...Object.fromEntries(newBuckets.map((b) => [b.id, b])) },
+      categories: { ...state.categories, ...Object.fromEntries(newCategories.map((c) => [c.id, c])) },
+      tasks: { ...state.tasks, ...Object.fromEntries(newTasks.map((t) => [t.id, t])) },
+    }))
+    repo.putBoard(newBoard)
+    newBuckets.forEach((b) => repo.putBucket(b))
+    newCategories.forEach((c) => repo.putCategory(c))
+    newTasks.forEach((t) => repo.putTask(t))
+    return newBoardId
   },
 
   addBucket: (boardId, name) => {
@@ -145,6 +254,9 @@ export const useStore = create<AppState>((set, get) => ({
     debouncedPutBucket(id, () => get().buckets[id])
   },
   deleteBucket: (id) => {
+    const bucket = get().buckets[id]
+    if (!bucket) return
+    finalizePendingDeletion()
     const affectedTasks = Object.values(get().tasks).filter((t) => t.bucketId === id)
     set((state) => {
       const buckets = { ...state.buckets }
@@ -152,8 +264,26 @@ export const useStore = create<AppState>((set, get) => ({
       const tasks = Object.fromEntries(Object.entries(state.tasks).filter(([, t]) => t.bucketId !== id))
       return { buckets, tasks }
     })
-    repo.deleteBucketCascade(id)
-    for (const t of affectedTasks) logActivity(t.id, t.name, 'delete', t.status)
+    const commit = () => {
+      repo.deleteBucketCascade(id)
+      for (const t of affectedTasks) logActivity(t.id, t.name, 'delete', t.status)
+    }
+    const timeoutId = setTimeout(() => {
+      commit()
+      set({ pendingDeletion: null })
+    }, 6000)
+    set({
+      pendingDeletion: {
+        label: `"${bucket.name}" deleted`,
+        timeoutId,
+        commit,
+        restore: () =>
+          set((state) => ({
+            buckets: { ...state.buckets, [id]: bucket },
+            tasks: { ...state.tasks, ...Object.fromEntries(affectedTasks.map((t) => [t.id, t])) },
+          })),
+      },
+    })
   },
   reorderBuckets: (boardId, orderedIds) => {
     const updates: Record<string, Bucket> = {}
@@ -182,6 +312,8 @@ export const useStore = create<AppState>((set, get) => ({
       importance: null,
       description: '',
       storyPoints: null,
+      subtasks: [],
+      recurrence: null,
       order,
       timer: { isRunning: false, elapsedSeconds: 0, startedAt: null },
       createdAt: Date.now(),
@@ -207,6 +339,8 @@ export const useStore = create<AppState>((set, get) => ({
       importance: null,
       description: '',
       storyPoints: null,
+      subtasks: [],
+      recurrence: null,
       order: 0,
       timer: { isRunning: false, elapsedSeconds: 0, startedAt: null },
       createdAt: Date.now(),
@@ -244,13 +378,83 @@ export const useStore = create<AppState>((set, get) => ({
   },
   deleteTask: (id) => {
     const task = get().tasks[id]
+    if (!task) return
+    finalizePendingDeletion()
     set((state) => {
       const tasks = { ...state.tasks }
       delete tasks[id]
       return { tasks }
     })
-    repo.deleteTask(id)
-    if (task) logActivity(id, task.name, 'delete', task.status)
+    const commit = () => {
+      repo.deleteTask(id)
+      logActivity(id, task.name, 'delete', task.status)
+    }
+    const timeoutId = setTimeout(() => {
+      commit()
+      set({ pendingDeletion: null })
+    }, 6000)
+    set({
+      pendingDeletion: {
+        label: `"${task.name}" deleted`,
+        timeoutId,
+        commit,
+        restore: () => set((state) => ({ tasks: { ...state.tasks, [id]: task } })),
+      },
+    })
+  },
+  deleteTasksWithUndo: (ids) => {
+    const tasksToDelete = ids.map((id) => get().tasks[id]).filter((t): t is TaskCard => !!t)
+    if (tasksToDelete.length === 0) return
+    finalizePendingDeletion()
+    set((state) => {
+      const tasks = { ...state.tasks }
+      for (const t of tasksToDelete) delete tasks[t.id]
+      return { tasks }
+    })
+    const commit = () => {
+      for (const t of tasksToDelete) {
+        repo.deleteTask(t.id)
+        logActivity(t.id, t.name, 'delete', t.status)
+      }
+    }
+    const timeoutId = setTimeout(() => {
+      commit()
+      set({ pendingDeletion: null })
+    }, 6000)
+    set({
+      pendingDeletion: {
+        label: `${tasksToDelete.length} task${tasksToDelete.length === 1 ? '' : 's'} deleted`,
+        timeoutId,
+        commit,
+        restore: () =>
+          set((state) => ({
+            tasks: { ...state.tasks, ...Object.fromEntries(tasksToDelete.map((t) => [t.id, t])) },
+          })),
+      },
+    })
+  },
+  duplicateTask: (taskId) => {
+    const task = get().tasks[taskId]
+    if (!task) return
+    const id = crypto.randomUUID()
+    const order = Object.values(get().tasks).filter(
+      (t) => t.bucketId === task.bucketId && t.status !== 'completed',
+    ).length
+    const duplicate: TaskCard = {
+      ...task,
+      id,
+      name: `${task.name} (copy)`,
+      status: 'not-started',
+      order,
+      timer: { isRunning: false, elapsedSeconds: 0, startedAt: null },
+      createdAt: Date.now(),
+      completedAt: null,
+      subtasks: task.subtasks.map((s) => ({ ...s, id: crypto.randomUUID() })),
+    }
+    set((state) => ({ tasks: { ...state.tasks, [id]: duplicate } }))
+    repo.putTask(duplicate)
+    logActivity(id, duplicate.name, 'create', duplicate.status)
+    return id
   },
   moveTask: (taskId, toBucketId, toIndex) => {
     const state = get()
@@ -373,6 +577,23 @@ export const useStore = create<AppState>((set, get) => ({
     set((state) => ({ tasks: { ...state.tasks, [taskId]: updated } }))
     repo.putTask(updated)
     logActivity(taskId, task.name, 'status-change', updated.status, segmentStart)
+
+    if (updated.recurrence && updated.dueDate) {
+      const nextId = crypto.randomUUID()
+      const nextTask: TaskCard = {
+        ...updated,
+        id: nextId,
+        status: 'not-started',
+        completedAt: null,
+        dueDate: addToDateString(updated.dueDate, updated.recurrence.interval, updated.recurrence.unit),
+        timer: { isRunning: false, elapsedSeconds: 0, startedAt: null },
+        createdAt: Date.now(),
+        subtasks: updated.subtasks.map((s) => ({ ...s, id: crypto.randomUUID(), done: false })),
+      }
+      set((state) => ({ tasks: { ...state.tasks, [nextId]: nextTask } }))
+      repo.putTask(nextTask)
+      logActivity(nextId, nextTask.name, 'create', nextTask.status)
+    }
   },
   uncompleteTask: (taskId) => {
     const task = get().tasks[taskId]
@@ -436,4 +657,5 @@ export const useStore = create<AppState>((set, get) => ({
       .map((t) => ({ taskId: t.id, taskName: t.name, start: t.timer.startedAt as number, end: now }))
     await downloadTimesheetCsv(runningIntervals)
   },
-}))
+  }
+})

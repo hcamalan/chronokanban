@@ -7,7 +7,7 @@ import { AttachmentList } from './AttachmentList'
 import { ConfirmDialog } from '../boards/ConfirmDialog'
 import { flushAllDebouncers } from '../../store/persist'
 import { formatHHMM, parseHHMM } from '../../utils/time'
-import type { Urgency, Importance, TaskStatus } from '../../types'
+import type { Urgency, Importance, TaskStatus, RecurrenceUnit } from '../../types'
 
 interface TaskDetailModalProps {
   taskId: string
@@ -17,9 +17,15 @@ interface TaskDetailModalProps {
 export function TaskDetailModal({ taskId, onClose }: TaskDetailModalProps) {
   const task = useStore((s) => s.tasks[taskId])
   const boards = useStore(useShallow((s) => Object.values(s.boards).sort((a, b) => a.order - b.order)))
+  const assigneeSuggestions = useStore(
+    useShallow((s) =>
+      Array.from(new Set(Object.values(s.tasks).map((t) => t.assignedTo).filter((a) => a.trim() !== ''))).sort(),
+    ),
+  )
   const updateTask = useStore((s) => s.updateTask)
   const moveTaskToBoard = useStore((s) => s.moveTaskToBoard)
   const deleteTask = useStore((s) => s.deleteTask)
+  const duplicateTask = useStore((s) => s.duplicateTask)
   const startTimer = useStore((s) => s.startTimer)
   const pauseTimer = useStore((s) => s.pauseTimer)
   const resetTimer = useStore((s) => s.resetTimer)
@@ -31,6 +37,7 @@ export function TaskDetailModal({ taskId, onClose }: TaskDetailModalProps) {
   const [elapsedFocused, setElapsedFocused] = useState(false)
   const [descriptionExpanded, setDescriptionExpanded] = useState(false)
   const [maximized, setMaximized] = useState(false)
+  const [newSubtaskText, setNewSubtaskText] = useState('')
 
   // Re-sync the displayed text whenever the stored elapsed time changes (timer actions, or our own
   // committed edits) — but never while the user is actively focused in the field, so it can't clobber
@@ -203,8 +210,14 @@ export function TaskDetailModal({ taskId, onClose }: TaskDetailModalProps) {
             <input
               value={task.assignedTo}
               onChange={(e) => updateTask(taskId, { assignedTo: e.target.value })}
+              list="assignee-suggestions"
               className="rounded border border-gray-300 px-2 py-1 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
             />
+            <datalist id="assignee-suggestions">
+              {assigneeSuggestions.map((name) => (
+                <option key={name} value={name} />
+              ))}
+            </datalist>
           </label>
 
           <label className="flex flex-col gap-1 text-sm text-gray-600 dark:text-gray-300">
@@ -261,6 +274,104 @@ export function TaskDetailModal({ taskId, onClose }: TaskDetailModalProps) {
               <option value="high">High</option>
             </select>
           </label>
+
+          <label className="flex flex-col gap-1 text-sm text-gray-600 dark:text-gray-300">
+            Repeat
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={!!task.recurrence}
+                disabled={!task.dueDate}
+                onChange={(e) =>
+                  updateTask(taskId, {
+                    recurrence: e.target.checked ? { interval: 1, unit: 'week' } : null,
+                  })
+                }
+                className="h-4 w-4 cursor-pointer disabled:cursor-not-allowed"
+              />
+              {task.recurrence && (
+                <>
+                  <input
+                    type="number"
+                    min={1}
+                    value={task.recurrence.interval}
+                    onChange={(e) =>
+                      updateTask(taskId, {
+                        recurrence: { interval: Math.max(1, Number(e.target.value)), unit: task.recurrence!.unit },
+                      })
+                    }
+                    className="w-14 rounded border border-gray-300 px-2 py-1 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                  />
+                  <select
+                    value={task.recurrence.unit}
+                    onChange={(e) =>
+                      updateTask(taskId, {
+                        recurrence: { interval: task.recurrence!.interval, unit: e.target.value as RecurrenceUnit },
+                      })
+                    }
+                    className="rounded border border-gray-300 px-2 py-1 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                  >
+                    <option value="day">Day(s)</option>
+                    <option value="week">Week(s)</option>
+                    <option value="month">Month(s)</option>
+                  </select>
+                </>
+              )}
+            </div>
+            {!task.dueDate && <span className="text-xs text-gray-400">Set a due date to enable</span>}
+          </label>
+        </div>
+
+        <div className="mt-4">
+          <h3 className="mb-2 text-sm text-gray-600 dark:text-gray-300">Sub-tasks</h3>
+          <div className="flex flex-col gap-1">
+            {task.subtasks.map((sub) => (
+              <div key={sub.id} className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={sub.done}
+                  onChange={() =>
+                    updateTask(taskId, {
+                      subtasks: task.subtasks.map((s) => (s.id === sub.id ? { ...s, done: !s.done } : s)),
+                    })
+                  }
+                  className="h-4 w-4 flex-shrink-0 cursor-pointer"
+                />
+                <span
+                  className={`flex-1 text-sm ${
+                    sub.done ? 'text-gray-400 line-through dark:text-gray-500' : 'text-gray-900 dark:text-gray-100'
+                  }`}
+                >
+                  {sub.text}
+                </span>
+                <button
+                  onClick={() => updateTask(taskId, { subtasks: task.subtasks.filter((s) => s.id !== sub.id) })}
+                  aria-label={`Delete sub-task ${sub.text}`}
+                  className="text-xs text-gray-400 hover:text-red-500"
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              if (!newSubtaskText.trim()) return
+              updateTask(taskId, {
+                subtasks: [...task.subtasks, { id: crypto.randomUUID(), text: newSubtaskText.trim(), done: false }],
+              })
+              setNewSubtaskText('')
+            }}
+            className="mt-2"
+          >
+            <input
+              value={newSubtaskText}
+              onChange={(e) => setNewSubtaskText(e.target.value)}
+              placeholder="+ Add sub-task"
+              className="w-full rounded border border-gray-300 px-2 py-1 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+            />
+          </form>
         </div>
 
         <label className="mt-4 flex flex-col gap-1 text-sm text-gray-600 dark:text-gray-300">
@@ -283,7 +394,16 @@ export function TaskDetailModal({ taskId, onClose }: TaskDetailModalProps) {
 
         <AttachmentList taskId={taskId} />
 
-        <div className="mt-6 flex justify-end">
+        <div className="mt-6 flex justify-end gap-2">
+          <button
+            onClick={() => {
+              duplicateTask(taskId)
+              handleClose()
+            }}
+            className="rounded px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+          >
+            Duplicate
+          </button>
           <button
             onClick={() => setConfirmingDelete(true)}
             className="rounded px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-950"

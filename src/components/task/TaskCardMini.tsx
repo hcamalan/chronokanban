@@ -7,9 +7,12 @@ import { getSemanticColors, remapCategoryColor } from '../../utils/colorPalette'
 interface TaskCardMiniProps {
   task: TaskCard
   onClick: () => void
+  selectMode?: boolean
+  selected?: boolean
+  onToggleSelect?: () => void
 }
 
-export function TaskCardMini({ task, onClick }: TaskCardMiniProps) {
+export function TaskCardMini({ task, onClick, selectMode, selected, onToggleSelect }: TaskCardMiniProps) {
   const category = useStore((s) => (task.categoryId ? s.categories[task.categoryId] : undefined))
   const startTimer = useStore((s) => s.startTimer)
   const pauseTimer = useStore((s) => s.pauseTimer)
@@ -21,23 +24,35 @@ export function TaskCardMini({ task, onClick }: TaskCardMiniProps) {
   const isCompleted = task.status === 'completed'
   const categoryColor = category ? remapCategoryColor(category.color, colorMode) : undefined
   const highTagColor = getSemanticColors(colorMode).level.high
+  const doneSubtasks = task.subtasks.filter((s) => s.done).length
 
   return (
     <div
-      onClick={onClick}
+      onClick={selectMode ? onToggleSelect : onClick}
       className={`flex cursor-pointer flex-col gap-1.5 rounded-md border border-gray-200 bg-white p-2.5 text-left shadow-sm hover:shadow dark:border-gray-700 dark:bg-gray-900 ${
         isCompleted ? 'opacity-60' : ''
       }`}
     >
       <div className="flex items-start gap-2">
-        <input
-          type="checkbox"
-          checked={isCompleted}
-          onChange={() => (isCompleted ? uncompleteTask(task.id) : completeTask(task.id))}
-          onClick={(e) => e.stopPropagation()}
-          aria-label={isCompleted ? 'Mark task incomplete' : 'Mark task complete'}
-          className="mt-0.5 h-4 w-4 flex-shrink-0 cursor-pointer"
-        />
+        {selectMode ? (
+          <input
+            type="checkbox"
+            checked={!!selected}
+            onChange={onToggleSelect}
+            onClick={(e) => e.stopPropagation()}
+            aria-label={selected ? 'Deselect task' : 'Select task'}
+            className="mt-0.5 h-4 w-4 flex-shrink-0 cursor-pointer"
+          />
+        ) : (
+          <input
+            type="checkbox"
+            checked={isCompleted}
+            onChange={() => (isCompleted ? uncompleteTask(task.id) : completeTask(task.id))}
+            onClick={(e) => e.stopPropagation()}
+            aria-label={isCompleted ? 'Mark task incomplete' : 'Mark task complete'}
+            className="mt-0.5 h-4 w-4 flex-shrink-0 cursor-pointer"
+          />
+        )}
         <span
           className={`text-sm font-medium text-gray-900 dark:text-gray-100 ${
             isCompleted ? 'text-gray-400 line-through dark:text-gray-500' : ''
@@ -53,6 +68,11 @@ export function TaskCardMini({ task, onClick }: TaskCardMiniProps) {
             style={{ backgroundColor: `${categoryColor}33`, color: categoryColor }}
           >
             {category.name}
+          </span>
+        )}
+        {task.subtasks.length > 0 && (
+          <span className="rounded-full bg-gray-100 px-1.5 py-0.5 text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+            {doneSubtasks}/{task.subtasks.length}
           </span>
         )}
         {task.dueDate && (

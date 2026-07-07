@@ -10,8 +10,14 @@ import {
   type DragEndEvent,
   type DragStartEvent,
 } from '@dnd-kit/core'
-import { SortableContext, horizontalListSortingStrategy, arrayMove } from '@dnd-kit/sortable'
+import {
+  SortableContext,
+  horizontalListSortingStrategy,
+  verticalListSortingStrategy,
+  arrayMove,
+} from '@dnd-kit/sortable'
 import { useStore } from '../../store/useStore'
+import { useMediaQuery } from '../../hooks/useMediaQuery'
 import { BucketColumn, bucketSortableId } from './BucketColumn'
 import { CategoryManager } from './CategoryManager'
 import { completedDroppableId } from './CompletedSection'
@@ -38,14 +44,44 @@ export function BoardDetailView({ boardId, onBack, onOpenTask }: BoardDetailView
   const addBucket = useStore((s) => s.addBucket)
   const addTaskAtTop = useStore((s) => s.addTaskAtTop)
   const moveTask = useStore((s) => s.moveTask)
+  const completeTask = useStore((s) => s.completeTask)
+  const deleteTasksWithUndo = useStore((s) => s.deleteTasksWithUndo)
   const reorderBuckets = useStore((s) => s.reorderBuckets)
   const bucketWidth = useStore((s) => s.preferences.bucketWidth)
+  const isDesktop = useMediaQuery('(min-width: 768px)')
   const [editingName, setEditingName] = useState(false)
   const [name, setName] = useState(board?.name ?? '')
   const [newBucketName, setNewBucketName] = useState('')
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectMode, setSelectMode] = useState(false)
+  const [selectedTaskIds, setSelectedTaskIds] = useState<Set<string>>(new Set())
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }))
+
+  function toggleTaskSelected(taskId: string) {
+    setSelectedTaskIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(taskId)) next.delete(taskId)
+      else next.add(taskId)
+      return next
+    })
+  }
+
+  function handleBulkMove(toBucketId: string) {
+    selectedTaskIds.forEach((id) => moveTask(id, toBucketId, Number.MAX_SAFE_INTEGER))
+    setSelectedTaskIds(new Set())
+  }
+
+  function handleBulkComplete() {
+    selectedTaskIds.forEach((id) => completeTask(id))
+    setSelectedTaskIds(new Set())
+  }
+
+  function handleBulkDelete() {
+    deleteTasksWithUndo(Array.from(selectedTaskIds))
+    setSelectedTaskIds(new Set())
+  }
 
   function handleDragStart(event: DragStartEvent) {
     const id = String(event.active.id)
@@ -162,6 +198,19 @@ export function BoardDetailView({ boardId, onBack, onOpenTask }: BoardDetailView
         </div>
         <div className="flex items-center gap-2">
           <button
+            onClick={() => {
+              setSelectMode((v) => !v)
+              setSelectedTaskIds(new Set())
+            }}
+            className={`rounded px-3 py-1.5 text-sm ${
+              selectMode
+                ? 'bg-blue-600 text-white hover:bg-blue-700'
+                : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
+            }`}
+          >
+            {selectMode ? 'Cancel' : 'Select'}
+          </button>
+          <button
             onClick={() => addBucket(boardId, 'New bucket')}
             className="rounded bg-gray-900 px-3 py-1.5 text-sm text-white hover:bg-gray-700 dark:bg-gray-100 dark:text-gray-900"
           >
@@ -182,16 +231,68 @@ export function BoardDetailView({ boardId, onBack, onOpenTask }: BoardDetailView
         </div>
       </div>
 
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <input
+          id="task-search-input"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search tasks... (press /)"
+          className="w-64 rounded border border-gray-300 px-2 py-1 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+        />
+        {selectMode && selectedTaskIds.size > 0 && (
+          <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+            <span>{selectedTaskIds.size} selected</span>
+            <select
+              value=""
+              onChange={(e) => {
+                if (e.target.value) handleBulkMove(e.target.value)
+              }}
+              className="rounded border border-gray-300 px-2 py-1 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+            >
+              <option value="">Move to...</option>
+              {buckets.map((b) => (
+                <option key={b.id} value={b.id}>
+                  {b.name}
+                </option>
+              ))}
+            </select>
+            <button
+              onClick={handleBulkComplete}
+              className="rounded px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-800"
+            >
+              Complete
+            </button>
+            <button
+              onClick={handleBulkDelete}
+              className="rounded px-2 py-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-950"
+            >
+              Delete
+            </button>
+          </div>
+        )}
+      </div>
+
       <DndContext
         sensors={sensors}
         collisionDetection={closestCorners}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <SortableContext items={buckets.map((b) => bucketSortableId(b.id))} strategy={horizontalListSortingStrategy}>
-          <div className="flex flex-1 gap-4 overflow-x-auto pb-4">
+        <SortableContext
+          items={buckets.map((b) => bucketSortableId(b.id))}
+          strategy={isDesktop ? horizontalListSortingStrategy : verticalListSortingStrategy}
+        >
+          <div className={isDesktop ? 'flex flex-1 gap-4 overflow-x-auto pb-4' : 'flex flex-1 flex-col gap-4 pb-4'}>
             {buckets.map((bucket) => (
-              <BucketColumn key={bucket.id} bucket={bucket} onOpenTask={onOpenTask} />
+              <BucketColumn
+                key={bucket.id}
+                bucket={bucket}
+                onOpenTask={onOpenTask}
+                searchQuery={searchQuery}
+                selectMode={selectMode}
+                selectedTaskIds={selectedTaskIds}
+                onToggleSelect={toggleTaskSelected}
+              />
             ))}
             <form
               onSubmit={(e) => {
@@ -200,7 +301,7 @@ export function BoardDetailView({ boardId, onBack, onOpenTask }: BoardDetailView
                 addBucket(boardId, newBucketName.trim())
                 setNewBucketName('')
               }}
-              className={`flex h-fit ${bucketWidthClass(bucketWidth)} flex-shrink-0 flex-col gap-2 rounded-lg border-2 border-dashed border-gray-300 p-3 dark:border-gray-600`}
+              className={`flex h-fit ${isDesktop ? bucketWidthClass(bucketWidth) : 'w-full'} flex-shrink-0 flex-col gap-2 rounded-lg border-2 border-dashed border-gray-300 p-3 dark:border-gray-600`}
             >
               <input
                 value={newBucketName}
