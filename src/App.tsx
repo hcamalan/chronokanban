@@ -112,6 +112,13 @@ function App() {
         return
       }
 
+      if (view.kind === 'boards' && /^[1-9]$/.test(e.key)) {
+        const boards = Object.values(useStore.getState().boards).sort((a, b) => a.order - b.order)
+        const board = boards[Number(e.key) - 1]
+        if (board) setView({ kind: 'board', boardId: board.id })
+        return
+      }
+
       if (!e.shiftKey && e.key.toLowerCase() === 'b') {
         setView({ kind: 'boards' })
         return

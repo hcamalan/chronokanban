@@ -10,6 +10,7 @@ const SHORTCUTS: { key: string; action: string }[] = [
   { key: 'Shift+K', action: 'New bucket (on a board)' },
   { key: 'Shift+B', action: 'New board' },
   { key: '[ / ]', action: 'Previous / next board' },
+  { key: '1-9', action: 'Open that board (on the Boards list)' },
   { key: 'B', action: 'Go to Boards' },
   { key: 'D', action: 'Go to Dashboard' },
   { key: 'Ctrl/Cmd+Z', action: 'Undo last delete' },
