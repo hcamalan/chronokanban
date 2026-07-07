@@ -1,7 +1,8 @@
 import type { TaskCard } from '../../types'
 import { useStore } from '../../store/useStore'
+import { useTick } from '../../hooks/useTick'
 import { PlayPauseButton } from './PlayPauseButton'
-import { formatDuration, formatDate } from '../../utils/time'
+import { formatDuration, formatDate, isTimerLongRunning } from '../../utils/time'
 import { getSemanticColors, remapCategoryColor } from '../../utils/colorPalette'
 
 interface TaskCardMiniProps {
@@ -25,12 +26,18 @@ export function TaskCardMini({ task, onClick, selectMode, selected, onToggleSele
   const categoryColor = category ? remapCategoryColor(category.color, colorMode) : undefined
   const highTagColor = getSemanticColors(colorMode).level.high
   const doneSubtasks = task.subtasks.filter((s) => s.done).length
+  useTick(task.timer.isRunning, 60_000)
+  const longRunning = isTimerLongRunning(task.timer)
 
   return (
     <div
       onClick={selectMode ? onToggleSelect : onClick}
       className={`flex cursor-pointer flex-col gap-1.5 rounded-md border border-gray-200 p-2.5 text-left shadow-sm hover:shadow dark:border-gray-700 ${
-        !isCompleted && task.timer.isRunning ? 'bg-blue-50 dark:bg-blue-950/40' : 'bg-white dark:bg-gray-900'
+        !isCompleted && task.timer.isRunning
+          ? longRunning
+            ? 'bg-amber-50 dark:bg-amber-950/40'
+            : 'bg-blue-50 dark:bg-blue-950/40'
+          : 'bg-white dark:bg-gray-900'
       } ${isCompleted ? 'opacity-60' : ''}`}
     >
       <div className="flex items-start gap-2">
@@ -105,11 +112,16 @@ export function TaskCardMini({ task, onClick, selectMode, selected, onToggleSele
           {formatDuration(task.timer.elapsedSeconds)}
         </span>
       ) : (
-        <PlayPauseButton
-          timer={task.timer}
-          onStart={() => startTimer(task.id)}
-          onPause={() => pauseTimer(task.id)}
-        />
+        <div className="flex items-center gap-1.5">
+          <PlayPauseButton
+            timer={task.timer}
+            onStart={() => startTimer(task.id)}
+            onPause={() => pauseTimer(task.id)}
+          />
+          {longRunning && (
+            <span title="Running for over 8 hours — you may have forgotten to pause this">⚠</span>
+          )}
+        </div>
       )}
     </div>
   )

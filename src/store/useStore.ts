@@ -57,6 +57,7 @@ interface AppState {
 
   startTimer: (taskId: string) => void
   pauseTimer: (taskId: string) => void
+  pauseAllTimers: (boardId?: string) => void
   resetTimer: (taskId: string) => void
   setElapsedTime: (taskId: string, newElapsedSeconds: number) => void
 
@@ -529,6 +530,11 @@ export const useStore = create<AppState>((set, get) => {
     set((state) => ({ tasks: { ...state.tasks, [taskId]: updated } }))
     repo.putTask(updated)
     logActivity(taskId, task.name, 'timer-pause', updated.status, segmentStart)
+  },
+  pauseAllTimers: (boardId) => {
+    Object.values(get().tasks)
+      .filter((t) => t.timer.isRunning && (boardId == null || t.boardId === boardId))
+      .forEach((t) => get().pauseTimer(t.id))
   },
   resetTimer: (taskId) => {
     const task = get().tasks[taskId]

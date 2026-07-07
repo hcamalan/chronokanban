@@ -21,6 +21,7 @@ import { useMediaQuery } from '../../hooks/useMediaQuery'
 import { BucketColumn, bucketSortableId } from './BucketColumn'
 import { CategoryManager } from './CategoryManager'
 import { completedDroppableId } from './CompletedSection'
+import { RunningTimersBanner } from '../boards/RunningTimersBanner'
 import { TaskCardMini } from '../task/TaskCardMini'
 import { bucketWidthClass } from '../../utils/bucketWidth'
 
@@ -47,6 +48,7 @@ export function BoardDetailView({ boardId, onBack, onOpenTask }: BoardDetailView
   const completeTask = useStore((s) => s.completeTask)
   const deleteTasksWithUndo = useStore((s) => s.deleteTasksWithUndo)
   const reorderBuckets = useStore((s) => s.reorderBuckets)
+  const pauseAllTimers = useStore((s) => s.pauseAllTimers)
   const bucketWidth = useStore((s) => s.preferences.bucketWidth)
   const isDesktop = useMediaQuery('(min-width: 768px)')
   const [editingName, setEditingName] = useState(false)
@@ -163,8 +165,11 @@ export function BoardDetailView({ boardId, onBack, onOpenTask }: BoardDetailView
 
   if (!board) return null
 
+  const runningTasksInBoard = Object.values(tasks).filter((t) => t.boardId === boardId && t.timer.isRunning)
+
   return (
     <div className="flex h-full flex-col p-6">
+      <RunningTimersBanner tasks={runningTasksInBoard} onPauseAll={() => pauseAllTimers(boardId)} />
       <div className="mb-6 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <button

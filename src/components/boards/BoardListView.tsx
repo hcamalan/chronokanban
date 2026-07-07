@@ -12,6 +12,7 @@ import { SortableContext, rectSortingStrategy, arrayMove } from '@dnd-kit/sortab
 import { useStore } from '../../store/useStore'
 import { SortableBoardCard } from './SortableBoardCard'
 import { ConfirmDialog } from './ConfirmDialog'
+import { RunningTimersBanner } from './RunningTimersBanner'
 
 interface BoardListViewProps {
   onOpenBoard: (boardId: string) => void
@@ -25,6 +26,7 @@ export function BoardListView({ onOpenBoard }: BoardListViewProps) {
   const deleteBoard = useStore((s) => s.deleteBoard)
   const duplicateBoard = useStore((s) => s.duplicateBoard)
   const reorderBoards = useStore((s) => s.reorderBoards)
+  const pauseAllTimers = useStore((s) => s.pauseAllTimers)
   const [newName, setNewName] = useState('')
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
 
@@ -32,6 +34,9 @@ export function BoardListView({ onOpenBoard }: BoardListViewProps) {
 
   const taskCountFor = (boardId: string) =>
     Object.values(tasks).filter((t) => t.boardId === boardId).length
+
+  const runningTasks = Object.values(tasks).filter((t) => t.timer.isRunning)
+  const runningBoardCount = new Set(runningTasks.map((t) => t.boardId)).size
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event
@@ -44,6 +49,11 @@ export function BoardListView({ onOpenBoard }: BoardListViewProps) {
 
   return (
     <div className="mx-auto max-w-5xl p-6">
+      <RunningTimersBanner
+        tasks={runningTasks}
+        boardCount={runningBoardCount}
+        onPauseAll={() => pauseAllTimers()}
+      />
       <h1 className="mb-6 text-2xl font-semibold text-gray-900 dark:text-gray-100">Boards</h1>
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext items={boards.map((b) => b.id)} strategy={rectSortingStrategy}>

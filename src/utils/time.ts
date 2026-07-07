@@ -1,4 +1,4 @@
-import type { TaskCard, DateFormat, RecurrenceUnit } from '../types'
+import type { TaskCard, DateFormat, RecurrenceUnit, TimerState } from '../types'
 
 export function formatDuration(totalSeconds: number): string {
   const seconds = Math.max(0, Math.floor(totalSeconds))
@@ -12,6 +12,14 @@ export function formatDuration(totalSeconds: number): string {
 export function isLate(task: TaskCard, now: number = Date.now()): boolean {
   if (task.status === 'completed' || !task.dueDate) return false
   return new Date(`${task.dueDate}T23:59:59`).getTime() < now
+}
+
+export const LONG_RUNNING_THRESHOLD_SECONDS = 8 * 60 * 60
+
+/** Flags a timer whose current, uninterrupted run has gone on unusually long (likely forgotten). */
+export function isTimerLongRunning(timer: TimerState): boolean {
+  if (!timer.isRunning || timer.startedAt == null) return false
+  return (Date.now() - timer.startedAt) / 1000 > LONG_RUNNING_THRESHOLD_SECONDS
 }
 
 /** Formats a YYYY-MM-DD date string per the given display preference (string split, no timezone conversion). */
