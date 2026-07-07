@@ -5,6 +5,7 @@ import { logActivity, downloadTimesheetCsv, purgeCurrentRunLog, type WorkInterva
 import { createDebouncer } from './persist'
 import { loadPreferences, savePreferences } from './preferencesStorage'
 import { markExported } from './backupStorage'
+import { hasSeededExampleBefore, seedExampleBoard } from '../db/exampleBoard'
 import { addToDateString } from '../utils/time'
 import type { Board, Bucket, TaskCard, Category, Preferences } from '../types'
 
@@ -112,6 +113,16 @@ export const useStore = create<AppState>((set, get) => {
       repo.getAllTasks(),
       repo.getAllCategories(),
     ])
+
+    // First-ever visit with nothing in the database yet — seed the example board so the app
+    // never opens to a blank screen. Skipped if the example was already seeded before (even if
+    // the user has since deleted it, or all their boards) — only "Delete all my data" reseeds.
+    if (boards.length === 0 && !hasSeededExampleBefore()) {
+      const seeded = await seedExampleBoard()
+      set({ ...seeded, loaded: true })
+      return
+    }
+
     set({
       boards: Object.fromEntries(boards.map((b) => [b.id, b])),
       buckets: Object.fromEntries(buckets.map((b) => [b.id, b])),
@@ -677,7 +688,10 @@ export const useStore = create<AppState>((set, get) => {
     const pending = get().pendingDeletion
     if (pending) clearTimeout(pending.timeoutId)
     await repo.clearAllData()
-    set({ boards: {}, buckets: {}, tasks: {}, categories: {}, pendingDeletion: null })
+    // Always restores the default example board, regardless of the seeded-before flag, so this
+    // destructive action never leaves the app on a blank screen.
+    const seeded = await seedExampleBoard()
+    set({ ...seeded, pendingDeletion: null })
   },
   }
 })

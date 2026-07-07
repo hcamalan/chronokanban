@@ -110,6 +110,26 @@ export async function clearAllData() {
   await tx.done
 }
 
+/** Writes a full example-board seed (board/buckets/categories/tasks/activityLog) in one transaction. */
+export async function seedDatabase(data: {
+  boards: Board[]
+  buckets: Bucket[]
+  tasks: TaskCard[]
+  categories: Category[]
+  activityLog: ActivityLogEntry[]
+}) {
+  const db = await getDB()
+  const tx = db.transaction(['boards', 'buckets', 'tasks', 'categories', 'activityLog'], 'readwrite')
+  await Promise.all([
+    ...data.boards.map((b) => tx.objectStore('boards').put(b)),
+    ...data.buckets.map((b) => tx.objectStore('buckets').put(b)),
+    ...data.tasks.map((t) => tx.objectStore('tasks').put(t)),
+    ...data.categories.map((c) => tx.objectStore('categories').put(c)),
+    ...data.activityLog.map((e) => tx.objectStore('activityLog').put(e)),
+  ])
+  await tx.done
+}
+
 export async function bulkPutAll(data: {
   boards: Board[]
   buckets: Bucket[]

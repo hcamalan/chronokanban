@@ -37,6 +37,13 @@ export function HowToView() {
       </p>
 
       <p className="mb-6">
+        The first time you open ChronoKanban, you'll see a worked example board ("Software Engineering") with
+        dozens of realistic tasks already tracked, so the dashboard and calendar aren't staring back at you empty.
+        It's a normal board — delete it like any other whenever you're ready to start your own. If you ever use
+        Settings → <strong>Delete all my data</strong> to wipe everything, it comes back automatically.
+      </p>
+
+      <p className="mb-6">
         ChronoKanban is built for individual use, not for coordinating a team. Because all data lives only in your
         own browser with nothing shared or synced, there's no practical way for multiple people to see or work
         from the same board — trying to use it as a team's shared tracker won't work the way a server-backed tool
