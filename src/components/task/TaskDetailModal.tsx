@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import ReactMarkdown from 'react-markdown'
 import { useShallow } from 'zustand/react/shallow'
 import { useStore } from '../../store/useStore'
 import { CategoryPicker } from './CategoryPicker'
@@ -37,6 +38,7 @@ export function TaskDetailModal({ taskId, onClose }: TaskDetailModalProps) {
   const [elapsedText, setElapsedText] = useState(() => formatHHMM(task?.timer.elapsedSeconds ?? 0))
   const [elapsedFocused, setElapsedFocused] = useState(false)
   const [descriptionExpanded, setDescriptionExpanded] = useState(false)
+  const [editingDescription, setEditingDescription] = useState(false)
   const [maximized, setMaximized] = useState(false)
   const [newSubtaskText, setNewSubtaskText] = useState('')
   const nameInputRef = useRef<HTMLInputElement>(null)
@@ -388,16 +390,39 @@ export function TaskDetailModal({ taskId, onClose }: TaskDetailModalProps) {
           </form>
         </div>
 
-        <label className="mt-4 flex flex-col gap-1 text-sm text-gray-600 dark:text-gray-300">
+        <div className="mt-4 flex flex-col gap-1 text-sm text-gray-600 dark:text-gray-300">
           Description
-          <textarea
-            value={task.description}
-            onChange={(e) => updateTask(taskId, { description: e.target.value })}
-            onKeyDown={blurOnCtrlEnter}
-            rows={descriptionExpanded ? 16 : 4}
-            className="rounded border border-gray-300 px-2 py-1 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-          />
-        </label>
+          {editingDescription || task.description.trim() === '' ? (
+            <textarea
+              value={task.description}
+              autoFocus={editingDescription}
+              onChange={(e) => updateTask(taskId, { description: e.target.value })}
+              onBlur={() => setEditingDescription(false)}
+              onKeyDown={blurOnCtrlEnter}
+              rows={descriptionExpanded ? 16 : 4}
+              placeholder="Add a description — markdown is supported"
+              className="rounded border border-gray-300 px-2 py-1 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+            />
+          ) : (
+            <div
+              onClick={() => setEditingDescription(true)}
+              title="Click to edit"
+              className={`cursor-text overflow-y-auto rounded border border-gray-300 px-2 py-1 text-gray-800 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 ${
+                descriptionExpanded ? 'max-h-[26rem]' : 'max-h-40'
+              } [&_a]:text-blue-600 [&_a]:underline [&_blockquote]:border-l-2 [&_blockquote]:border-gray-300 [&_blockquote]:pl-2 [&_blockquote]:text-gray-500 [&_code]:rounded [&_code]:bg-gray-100 [&_code]:px-1 [&_h1]:font-semibold [&_h2]:font-semibold [&_h3]:font-semibold [&_ol]:my-1 [&_ol]:list-decimal [&_ol]:pl-5 [&_p]:my-1 [&_ul]:my-1 [&_ul]:list-disc [&_ul]:pl-5 dark:[&_a]:text-blue-400 dark:[&_code]:bg-gray-700`}
+            >
+              <ReactMarkdown
+                components={{
+                  a: ({ node: _node, ...props }) => (
+                    <a {...props} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} />
+                  ),
+                }}
+              >
+                {task.description}
+              </ReactMarkdown>
+            </div>
+          )}
+        </div>
         <div className="flex justify-end">
           <button
             onClick={() => setDescriptionExpanded((v) => !v)}
