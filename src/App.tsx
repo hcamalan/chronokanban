@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { useStore } from './store/useStore'
 import { TopNav } from './components/layout/TopNav'
 import { HowToView } from './components/layout/HowToView'
-import { AboutView } from './components/layout/AboutView'
 import { Footer } from './components/layout/Footer'
 import { UndoToast } from './components/layout/UndoToast'
 import { BoardListView } from './components/boards/BoardListView'
@@ -15,7 +14,6 @@ type View =
   | { kind: 'board'; boardId: string }
   | { kind: 'dashboard' }
   | { kind: 'howto' }
-  | { kind: 'about' }
 
 function App() {
   const [view, setView] = useState<View>({ kind: 'boards' })
@@ -153,7 +151,6 @@ function App() {
           <DashboardView onOpenTask={(taskId) => setSelectedTaskId(taskId)} />
         )}
         {view.kind === 'howto' && <HowToView />}
-        {view.kind === 'about' && <AboutView />}
       </div>
       <Footer />
       {selectedTaskId && (

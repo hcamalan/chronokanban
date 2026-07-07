@@ -39,7 +39,7 @@ export function HotkeysPanel({ open, onOpenChange }: HotkeysPanelProps) {
         aria-label="Hotkeys"
         className="rounded px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
       >
-        ⌨️
+        Hotkeys
       </button>
       {open && (
         <div className="absolute right-0 z-20 mt-1 w-72 rounded border border-gray-200 bg-white p-3 shadow-lg dark:border-gray-700 dark:bg-gray-800">

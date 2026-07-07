@@ -1,83 +1,203 @@
+import type { ReactNode } from 'react'
+
+interface ChapterProps {
+  title: string
+  children: ReactNode
+}
+
+function Chapter({ title, children }: ChapterProps) {
+  return (
+    <details className="mb-3 rounded-lg border border-gray-200 dark:border-gray-700">
+      <summary className="cursor-pointer select-none rounded-lg px-4 py-3 text-lg font-medium text-gray-900 hover:bg-gray-50 dark:text-gray-100 dark:hover:bg-gray-800">
+        {title}
+      </summary>
+      <div className="space-y-3 border-t border-gray-200 px-4 py-3 dark:border-gray-700">{children}</div>
+    </details>
+  )
+}
+
+function SubChapter({ title, children }: ChapterProps) {
+  return (
+    <div>
+      <h3 className="mb-1 font-medium text-gray-800 dark:text-gray-200">{title}</h3>
+      <div className="text-sm">{children}</div>
+    </div>
+  )
+}
+
 export function HowToView() {
   return (
     <div className="mx-auto max-w-3xl p-6 text-gray-700 dark:text-gray-300">
       <h1 className="mb-6 text-2xl font-semibold text-gray-900 dark:text-gray-100">How to use ChronoKanban</h1>
 
       <p className="mb-6">
-        ChronoKanban is a Kanban board for tracking how much time you spend on your tasks. It runs entirely in your
-        browser — there's no account, no server, and nothing is sent anywhere. Your data lives only on this device.
+        ChronoKanban is a Kanban board with built-in time tracking. It runs entirely in your browser — there's no
+        account, no server, and nothing is ever sent anywhere. Your data lives only on this device.
       </p>
 
-      <section className="mb-6">
-        <h2 className="mb-2 text-lg font-medium text-gray-900 dark:text-gray-100">The basics: Boards, Buckets, Tasks</h2>
-        <p>
-          A <strong>board</strong> is a project or area of your life (e.g. "Work" or "Home"). Each board has
-          <strong> buckets</strong> — columns like "To Do", "In Progress", "Done" — and each bucket holds
-          <strong> task cards</strong>. Drag a card between buckets on the same board to move it along. To move a
-          task to a <em>different</em> board, open the task and change its "Board" field instead.
-        </p>
+      <section className="mb-8">
+        <h2 className="mb-3 text-lg font-semibold text-gray-900 dark:text-gray-100">Use cases</h2>
+        <ul className="list-disc space-y-3 pl-5">
+          <li>
+            <strong>Effortless time reports.</strong> Asked what you worked on last month with nothing to show for
+            it? Track your tasks as you go and let ChronoKanban build the report for you — open the Dashboard,
+            pick a board, and download a ready-to-share CSV timesheet in seconds.
+          </li>
+          <li>
+            <strong>See where your time actually goes.</strong> The Dashboard's configurable chart and calendar
+            view turn weeks of scattered work into a clear picture of how your time is split across categories,
+            statuses, and priorities.
+          </li>
+          <li>
+            <strong>A tracker for anything with moving parts.</strong> Job applications, house projects, side
+            hustles, errands — spin up a dedicated board in seconds, capture every detail on a card, and always
+            know exactly where things stand.
+          </li>
+          <li>
+            <strong>Private by design.</strong> No sign-up, no account, no data ever leaving your browser — and it
+            keeps working with no internet connection at all once it's loaded.
+          </li>
+        </ul>
       </section>
 
-      <section className="mb-6">
-        <h2 className="mb-2 text-lg font-medium text-gray-900 dark:text-gray-100">Tracking time</h2>
+      <Chapter title="Boards, buckets & tasks">
         <p>
-          Every task card has a play button. Click it to start the clock; click it again (now a pause button) to
-          pause. The elapsed time keeps counting even if you close the tab and come back later. To reset a task's
-          time back to zero, open the task's extended view — it's the only place with a Reset control.
+          A <strong>board</strong> is a project or area of your life (e.g. "Work" or "Home"). Each board has{' '}
+          <strong>buckets</strong> — columns like "To Do", "In Progress", "Done" — and each bucket holds{' '}
+          <strong>task cards</strong>.
         </p>
-        <p className="mt-2">
-          Forgot to start or stop the timer? The extended view also has an editable{' '}
-          <strong>Time elapsed</strong> field (H:MM) — type in the correct total and it's applied
-          immediately. The difference is credited to today in the timesheet download, so your report stays
-          accurate even after a correction.
+        <p>
+          Drag a card between buckets on the same board to move it along, and drag boards or buckets themselves to
+          reorder them. To move a task to a <em>different</em> board, open the task and change its "Board" field
+          instead.
         </p>
-      </section>
+      </Chapter>
 
-      <section className="mb-6">
-        <h2 className="mb-2 text-lg font-medium text-gray-900 dark:text-gray-100">Completing tasks</h2>
+      <Chapter title="Tracking time">
+        <SubChapter title="Starting and pausing">
+          <p>
+            Every task card has a play button. Click it to start the clock; click it again (now a pause button) to
+            pause. The elapsed time keeps counting even if you close the tab and come back later.
+          </p>
+        </SubChapter>
+        <SubChapter title="Correcting elapsed time">
+          <p>
+            Forgot to start or stop the timer? A task's extended view has an editable <strong>Time elapsed</strong>{' '}
+            field (H:MM) — type in the correct total and it's applied immediately. The difference is credited to
+            today in the timesheet download, so your report stays accurate even after a correction.
+          </p>
+        </SubChapter>
+        <SubChapter title="Resetting">
+          <p>To reset a task's time back to zero, open its extended view — it's the only place with a Reset control.</p>
+        </SubChapter>
+      </Chapter>
+
+      <Chapter title="Organizing & finding tasks">
+        <SubChapter title="Categories">
+          <p>
+            Categories are per-board labels with a color, used to group and chart your tasks (e.g. "Work",
+            "Family", "Health"). Manage a board's categories at the bottom of its page, and assign one to a task
+            from its extended view.
+          </p>
+        </SubChapter>
+        <SubChapter title="Urgency & importance">
+          <p>Tag a task's urgency and importance from its extended view to prioritize and filter by them later.</p>
+        </SubChapter>
+        <SubChapter title="Sub-tasks">
+          <p>Break a task down into a checklist of smaller steps from its extended view.</p>
+        </SubChapter>
+        <SubChapter title="Assignee">
+          <p>
+            Assign a task to someone in its extended view — names you've used before are suggested as you type.
+          </p>
+        </SubChapter>
+        <SubChapter title="Recurring due dates">
+          <p>
+            Turn on "Repeat" on a task's due date to have it recur on a fixed interval (e.g. every 2 weeks) once
+            completed.
+          </p>
+        </SubChapter>
+        <SubChapter title="Search & bulk actions">
+          <p>
+            Press <strong>/</strong> or use the search box on a board to filter its tasks instantly. Click{' '}
+            <strong>Select</strong> to check off multiple tasks at once and move, complete, or delete them
+            together.
+          </p>
+        </SubChapter>
+      </Chapter>
+
+      <Chapter title="Completing tasks">
         <p>
           Check a task's checkbox (on the card or in its extended view) to mark it done. Completed tasks get
           greyed out with a strikethrough, their timer stops automatically, and they move into the bucket's
           collapsed "Completed (X)" section — click that text to expand or collapse it.
         </p>
-      </section>
+      </Chapter>
 
-      <section className="mb-6">
-        <h2 className="mb-2 text-lg font-medium text-gray-900 dark:text-gray-100">Categories</h2>
+      <Chapter title="Dashboard & Calendar">
+        <SubChapter title="Effectiveness tiles">
+          <p>Two headline numbers: your on-time completion rate, and story points completed per hour tracked.</p>
+        </SubChapter>
+        <SubChapter title="Configurable chart">
+          <p>
+            Choose what to <strong>measure</strong> (number of tasks, time spent, or story points), what to{' '}
+            <strong>group by</strong> (category, status, importance, urgency, or late), and which tasks to include
+            via the filter dropdowns — then view it as a bar or pie chart. Pick a specific board to break down by
+            category; grouping by status/urgency/importance/late also works across all boards combined.
+          </p>
+        </SubChapter>
+        <SubChapter title="Calendar view">
+          <p>
+            Switch to day, 3-day, week, or month view to see bars for what you worked on, what's due, and what's
+            overdue, laid out on a real calendar.
+          </p>
+        </SubChapter>
+        <SubChapter title="Exporting">
+          <p>
+            Download the chart or calendar as a PNG image directly from their own download button, or use{' '}
+            <strong>Download report</strong> to export a full CSV timesheet — one row per day and task you tracked
+            time on, with hours spent and the task's status at the end of that day. (Only time tracked with the
+            timer is included, from when this feature was added onward.)
+          </p>
+        </SubChapter>
+      </Chapter>
+
+      <Chapter title="Keyboard shortcuts">
         <p>
-          Categories are per-board labels with a color, used to group and chart your tasks (e.g. "Work", "Family",
-          "Health"). Manage a board's categories at the bottom of its page, and assign one to a task from its
-          extended view.
+          ChronoKanban has a full set of keyboard shortcuts for creating boards/buckets/tasks, navigating, undo,
+          and more. Click <strong>Hotkeys</strong> in the top bar, or press <strong>?</strong>, to see the full
+          list at any time.
         </p>
-      </section>
+      </Chapter>
 
-      <section className="mb-6">
-        <h2 className="mb-2 text-lg font-medium text-gray-900 dark:text-gray-100">The Dashboard</h2>
+      <Chapter title="Preferences">
         <p>
-          The Dashboard tab shows analytics: two effectiveness numbers (your on-time completion rate and story
-          points completed per hour tracked), a list of late (overdue, unfinished) tasks, and a configurable
-          chart. In that chart you choose what to <strong>measure</strong> (number of tasks, time spent, or story
-          points), what to <strong>group by</strong> (category, status, importance, urgency, or late), and which
-          tasks to include via the filter dropdowns — then view it as a bar or pie chart. Pick a specific board
-          from the dropdown to break down by category; grouping by status/urgency/importance/late also works
-          across all boards combined.
+          Open <strong>Settings</strong> in the top bar to adjust dark mode, bucket width, date format, a
+          colorblind-safe color mode, and whether task descriptions show directly on their cards.
         </p>
-        <p className="mt-2">
-          <strong>Download report</strong> exports a CSV timesheet: one row per day and task you tracked time on,
-          with the total hours spent on that task that day and the task's status at the end of that day. Open it
-          in Excel to review or share how your week broke down. (Only time tracked with the timer is included,
-          from when this feature was added onward.)
-        </p>
-      </section>
+      </Chapter>
 
-      <section className="mb-6">
-        <h2 className="mb-2 text-lg font-medium text-gray-900 dark:text-gray-100">Backing up your data</h2>
+      <Chapter title="Backing up your data">
         <p>
           Since everything is stored locally, clearing your browser data would erase it. Use <strong>Export</strong>{' '}
           any time to download a full backup as a JSON file, and <strong>Import</strong> to restore it later or move
           it to another browser or device. Importing replaces everything currently in the app, so use it carefully.
         </p>
-      </section>
+      </Chapter>
+
+      <Chapter title="Working offline">
+        <p>
+          ChronoKanban makes no network calls of any kind — all your data lives in this browser's local storage.
+          Once you've loaded it here, it keeps working with no internet connection at all, and it can be installed
+          like an app from your browser's menu.
+        </p>
+        <p>
+          To run it on a machine with no internet access whatsoever, download the source, run{' '}
+          <code className="rounded bg-gray-100 px-1 dark:bg-gray-800">npm run build</code>, and serve the resulting{' '}
+          <code className="rounded bg-gray-100 px-1 dark:bg-gray-800">dist/</code> folder locally — no further
+          setup or connection is required.
+        </p>
+      </Chapter>
     </div>
   )
 }

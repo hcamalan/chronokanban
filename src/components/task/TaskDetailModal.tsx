@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { useStore } from '../../store/useStore'
 import { CategoryPicker } from './CategoryPicker'
@@ -39,6 +39,14 @@ export function TaskDetailModal({ taskId, onClose }: TaskDetailModalProps) {
   const [descriptionExpanded, setDescriptionExpanded] = useState(false)
   const [maximized, setMaximized] = useState(false)
   const [newSubtaskText, setNewSubtaskText] = useState('')
+  const nameInputRef = useRef<HTMLInputElement>(null)
+
+  // Newly-created tasks (from addTaskAtTop) start with an empty name — focus it immediately so
+  // typing a name works right away instead of hitting global keyboard shortcuts.
+  useEffect(() => {
+    if (task?.name === '') nameInputRef.current?.focus()
+    // oxlint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Re-sync the displayed text whenever the stored elapsed time changes (timer actions, or our own
   // committed edits) — but never while the user is actively focused in the field, so it can't clobber
@@ -90,6 +98,7 @@ export function TaskDetailModal({ taskId, onClose }: TaskDetailModalProps) {
               className="mt-2 h-4 w-4 flex-shrink-0 cursor-pointer"
             />
             <input
+              ref={nameInputRef}
               value={task.name}
               onChange={(e) => updateTask(taskId, { name: e.target.value })}
               onKeyDown={blurOnEnter}
