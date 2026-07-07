@@ -3,6 +3,7 @@ import { useStore } from '../../store/useStore'
 import { ImportConflictDialog } from '../boards/ImportConflictDialog'
 import { SettingsPanel } from './SettingsPanel'
 import { HotkeysPanel } from './HotkeysPanel'
+import { DonatePanel } from './DonatePanel'
 import {
   parseImportFile,
   findBoardConflicts,
@@ -101,14 +102,7 @@ export function TopNav({ activeTab, onNavigate, hotkeysOpen, onHotkeysOpenChange
         </nav>
       </div>
       <div className="flex items-center gap-2">
-        <a
-          href="https://paypal.me/HuseyinCamalan"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="rounded px-3 py-1.5 text-sm text-pink-700 hover:bg-pink-50 dark:text-pink-300 dark:hover:bg-pink-950"
-        >
-          ♥ Donate
-        </a>
+        <DonatePanel />
         <a
           href="mailto:chronokanban@pm.me?subject=ChronoKanban feedback"
           className="rounded px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
