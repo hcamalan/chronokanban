@@ -115,7 +115,8 @@ export const useStore = create<AppState>((set, get) => {
     set({
       boards: Object.fromEntries(boards.map((b) => [b.id, b])),
       buckets: Object.fromEntries(buckets.map((b) => [b.id, b])),
-      tasks: Object.fromEntries(tasks.map((t) => [t.id, t])),
+      // Tasks persisted before newer fields existed lack them entirely — backfill defaults.
+      tasks: Object.fromEntries(tasks.map((t) => [t.id, { ...t, estimatedHours: t.estimatedHours ?? null }])),
       categories: Object.fromEntries(categories.map((c) => [c.id, c])),
       loaded: true,
     })
@@ -315,6 +316,7 @@ export const useStore = create<AppState>((set, get) => {
       importance: null,
       description: '',
       storyPoints: null,
+      estimatedHours: null,
       subtasks: [],
       recurrence: null,
       order,
@@ -342,6 +344,7 @@ export const useStore = create<AppState>((set, get) => {
       importance: null,
       description: '',
       storyPoints: null,
+      estimatedHours: null,
       subtasks: [],
       recurrence: null,
       order: 0,

@@ -162,6 +162,17 @@ export function TaskDetailModal({ taskId, onClose }: TaskDetailModalProps) {
               className="w-16 rounded border border-gray-300 px-2 py-1 font-mono dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
             />
           </label>
+          {task.estimatedHours != null && task.estimatedHours > 0 && (
+            <span
+              className={`text-xs ${
+                task.timer.elapsedSeconds > task.estimatedHours * 3600
+                  ? 'text-red-600 dark:text-red-400'
+                  : 'text-gray-400 dark:text-gray-500'
+              }`}
+            >
+              of {task.estimatedHours}h estimated
+            </span>
+          )}
           {!isCompleted && (
             <button
               onClick={() => resetTimer(taskId)}
@@ -253,6 +264,23 @@ export function TaskDetailModal({ taskId, onClose }: TaskDetailModalProps) {
               onChange={(e) =>
                 updateTask(taskId, {
                   storyPoints: e.target.value === '' ? null : Number(e.target.value),
+                })
+              }
+              onKeyDown={blurOnEnter}
+              className="rounded border border-gray-300 px-2 py-1 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+            />
+          </label>
+
+          <label className="flex flex-col gap-1 text-sm text-gray-600 dark:text-gray-300">
+            Estimated hours
+            <input
+              type="number"
+              min={0}
+              step={0.5}
+              value={task.estimatedHours ?? ''}
+              onChange={(e) =>
+                updateTask(taskId, {
+                  estimatedHours: e.target.value === '' ? null : Number(e.target.value),
                 })
               }
               onKeyDown={blurOnEnter}

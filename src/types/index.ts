@@ -69,6 +69,8 @@ export interface TaskCard {
   importance: Importance | null
   description: string
   storyPoints: number | null
+  /** self-estimated effort in hours; compared against tracked time on the dashboard */
+  estimatedHours: number | null
   subtasks: Subtask[]
   recurrence: Recurrence | null
   /** position within its bucket */
