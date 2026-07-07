@@ -93,11 +93,11 @@ export function TopNav({ activeTab, onNavigate, hotkeysOpen, onHotkeysOpenChange
           <button onClick={() => onNavigate('boards')} className={tabClass('boards')}>
             Boards
           </button>
-          <button onClick={() => onNavigate('today')} className={tabClass('today')}>
-            Today
-          </button>
           <button onClick={() => onNavigate('dashboard')} className={tabClass('dashboard')}>
             Dashboard
+          </button>
+          <button onClick={() => onNavigate('today')} className={tabClass('today')}>
+            Today
           </button>
           <button onClick={() => onNavigate('howto')} className={tabClass('howto')}>
             How to
