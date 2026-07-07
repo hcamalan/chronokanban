@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { useStore } from '../../store/useStore'
 import { CATEGORY_COLORS, ColorSwatchPicker } from './ColorSwatchPicker'
+import { blurOnEnter } from '../../utils/keyboard'
 
 interface CategoryManagerProps {
   boardId: string
@@ -28,6 +29,7 @@ export function CategoryManager({ boardId }: CategoryManagerProps) {
           <input
             value={c.name}
             onChange={(e) => updateCategory(c.id, { name: e.target.value })}
+            onKeyDown={blurOnEnter}
             className="w-24 bg-transparent text-sm outline-none dark:text-gray-100"
           />
           <button

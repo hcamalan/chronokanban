@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { useStore } from '../../store/useStore'
 import { ImportConflictDialog } from '../boards/ImportConflictDialog'
 import { SettingsPanel } from './SettingsPanel'
+import { HotkeysPanel } from './HotkeysPanel'
 import {
   parseImportFile,
   findBoardConflicts,
@@ -13,6 +14,8 @@ import {
 interface TopNavProps {
   activeTab: 'boards' | 'dashboard' | 'howto' | 'about'
   onNavigate: (tab: 'boards' | 'dashboard' | 'howto' | 'about') => void
+  hotkeysOpen: boolean
+  onHotkeysOpenChange: (open: boolean) => void
 }
 
 interface ImportFlow {
@@ -22,7 +25,7 @@ interface ImportFlow {
   decisions: Record<string, ConflictDecision>
 }
 
-export function TopNav({ activeTab, onNavigate }: TopNavProps) {
+export function TopNav({ activeTab, onNavigate, hotkeysOpen, onHotkeysOpenChange }: TopNavProps) {
   const exportData = useStore((s) => s.exportData)
   const loadFromDB = useStore((s) => s.loadFromDB)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -128,6 +131,7 @@ export function TopNav({ activeTab, onNavigate }: TopNavProps) {
           onChange={handleFileSelected}
           className="hidden"
         />
+        <HotkeysPanel open={hotkeysOpen} onOpenChange={onHotkeysOpenChange} />
         <SettingsPanel />
       </div>
 

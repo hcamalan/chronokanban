@@ -7,6 +7,7 @@ import { AttachmentList } from './AttachmentList'
 import { ConfirmDialog } from '../boards/ConfirmDialog'
 import { flushAllDebouncers } from '../../store/persist'
 import { formatHHMM, parseHHMM } from '../../utils/time'
+import { blurOnEnter, blurOnCtrlEnter } from '../../utils/keyboard'
 import type { Urgency, Importance, TaskStatus, RecurrenceUnit } from '../../types'
 
 interface TaskDetailModalProps {
@@ -91,6 +92,7 @@ export function TaskDetailModal({ taskId, onClose }: TaskDetailModalProps) {
             <input
               value={task.name}
               onChange={(e) => updateTask(taskId, { name: e.target.value })}
+              onKeyDown={blurOnEnter}
               className={`w-full rounded border border-transparent px-1 text-xl font-semibold outline-none focus:border-gray-300 dark:bg-gray-900 dark:text-gray-100 dark:focus:border-gray-600 ${
                 isCompleted ? 'text-gray-400 line-through dark:text-gray-500' : ''
               }`}
@@ -210,6 +212,7 @@ export function TaskDetailModal({ taskId, onClose }: TaskDetailModalProps) {
             <input
               value={task.assignedTo}
               onChange={(e) => updateTask(taskId, { assignedTo: e.target.value })}
+              onKeyDown={blurOnEnter}
               list="assignee-suggestions"
               className="rounded border border-gray-300 px-2 py-1 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
             />
@@ -241,6 +244,7 @@ export function TaskDetailModal({ taskId, onClose }: TaskDetailModalProps) {
                   storyPoints: e.target.value === '' ? null : Number(e.target.value),
                 })
               }
+              onKeyDown={blurOnEnter}
               className="rounded border border-gray-300 px-2 py-1 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
             />
           </label>
@@ -300,6 +304,7 @@ export function TaskDetailModal({ taskId, onClose }: TaskDetailModalProps) {
                         recurrence: { interval: Math.max(1, Number(e.target.value)), unit: task.recurrence!.unit },
                       })
                     }
+                    onKeyDown={blurOnEnter}
                     className="w-14 rounded border border-gray-300 px-2 py-1 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
                   />
                   <select
@@ -379,6 +384,7 @@ export function TaskDetailModal({ taskId, onClose }: TaskDetailModalProps) {
           <textarea
             value={task.description}
             onChange={(e) => updateTask(taskId, { description: e.target.value })}
+            onKeyDown={blurOnCtrlEnter}
             rows={descriptionExpanded ? 16 : 4}
             className="rounded border border-gray-300 px-2 py-1 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
           />

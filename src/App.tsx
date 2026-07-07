@@ -20,6 +20,7 @@ type View =
 function App() {
   const [view, setView] = useState<View>({ kind: 'boards' })
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null)
+  const [hotkeysOpen, setHotkeysOpen] = useState(false)
   const loaded = useStore((s) => s.loaded)
   const loadFromDB = useStore((s) => s.loadFromDB)
   const darkMode = useStore((s) => s.preferences.darkMode)
@@ -41,18 +42,89 @@ function App() {
         setSelectedTaskId(null)
         return
       }
+
+      // Undo last delete — only takes over from the browser's native undo when a delete is
+      // actually pending, so Ctrl/Cmd+Z still works normally while editing text.
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+        if (!isTyping && useStore.getState().pendingDeletion) {
+          e.preventDefault()
+          useStore.getState().undoDelete()
+        }
+        return
+      }
+
       if (isTyping) return
+
       if (e.key === '/') {
         const search = document.getElementById('task-search-input')
         if (search) {
           e.preventDefault()
           search.focus()
         }
+        return
+      }
+
+      if (e.key === '?') {
+        setHotkeysOpen((v) => !v)
+        return
+      }
+
+      if (e.shiftKey && e.key.toLowerCase() === 't') {
+        if (view.kind === 'board') {
+          const buckets = Object.values(useStore.getState().buckets)
+            .filter((b) => b.boardId === view.boardId)
+            .sort((a, b) => a.order - b.order)
+          if (buckets.length > 0) {
+            const newTaskId = useStore.getState().addTaskAtTop(view.boardId, buckets[0].id)
+            setSelectedTaskId(newTaskId)
+          }
+        }
+        return
+      }
+
+      if (e.shiftKey && e.key.toLowerCase() === 'k') {
+        if (view.kind === 'board') {
+          useStore.getState().addBucket(view.boardId, 'New bucket')
+        }
+        return
+      }
+
+      if (e.shiftKey && e.key.toLowerCase() === 'b') {
+        if (view.kind !== 'boards') {
+          setView({ kind: 'boards' })
+          setTimeout(() => document.getElementById('new-board-name-input')?.focus(), 50)
+        } else {
+          document.getElementById('new-board-name-input')?.focus()
+        }
+        return
+      }
+
+      if (e.key === '[' || e.key === ']') {
+        if (view.kind === 'board') {
+          const boards = Object.values(useStore.getState().boards).sort((a, b) => a.order - b.order)
+          const idx = boards.findIndex((b) => b.id === view.boardId)
+          if (idx !== -1 && boards.length > 1) {
+            const direction = e.key === ']' ? 1 : -1
+            const nextIdx = (idx + direction + boards.length) % boards.length
+            setView({ kind: 'board', boardId: boards[nextIdx].id })
+          }
+        }
+        return
+      }
+
+      if (!e.shiftKey && e.key.toLowerCase() === 'b') {
+        setView({ kind: 'boards' })
+        return
+      }
+
+      if (!e.shiftKey && e.key.toLowerCase() === 'd') {
+        setView({ kind: 'dashboard' })
+        return
       }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [])
+  }, [view])
 
   if (!loaded) {
     return <div className="p-6 text-gray-500 dark:text-gray-400">Loading...</div>
@@ -63,6 +135,8 @@ function App() {
       <TopNav
         activeTab={view.kind === 'board' ? 'boards' : view.kind}
         onNavigate={(tab) => setView({ kind: tab })}
+        hotkeysOpen={hotkeysOpen}
+        onHotkeysOpenChange={setHotkeysOpen}
       />
       <div className="flex-1">
         {view.kind === 'boards' && (

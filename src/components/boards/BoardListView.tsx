@@ -69,6 +69,7 @@ export function BoardListView({ onOpenBoard }: BoardListViewProps) {
               className="flex h-28 flex-col justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 p-4 dark:border-gray-600"
             >
               <input
+                id="new-board-name-input"
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
                 placeholder="New board name"
