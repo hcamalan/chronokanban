@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { useStore } from '../../store/useStore'
 import { TaskCardMini } from '../task/TaskCardMini'
+import { RunningTimersBanner } from '../boards/RunningTimersBanner'
 import { buildDailyWorkSummary, type WorkInterval } from '../../db/activityLog'
 import { todayDateKey } from '../../utils/calendarRange'
 import { formatDuration, isLate } from '../../utils/time'
@@ -29,6 +30,7 @@ function TaskSection({ title, tasks, onOpenTask }: { title: string; tasks: TaskC
 
 export function TodayView({ onOpenTask }: TodayViewProps) {
   const tasks = useStore(useShallow((s) => Object.values(s.tasks)))
+  const pauseAllTimers = useStore((s) => s.pauseAllTimers)
   const [todaySeconds, setTodaySeconds] = useState<number | null>(null)
   const [tick, setTick] = useState(0)
 
@@ -64,9 +66,11 @@ export function TodayView({ onOpenTask }: TodayViewProps) {
 
   const nothingToShow =
     running.length === 0 && dueToday.length === 0 && overdue.length === 0 && completedToday.length === 0
+  const runningBoardCount = new Set(running.map((t) => t.boardId)).size
 
   return (
     <div className="mx-auto max-w-5xl p-6">
+      <RunningTimersBanner tasks={running} boardCount={runningBoardCount} onPauseAll={() => pauseAllTimers()} />
       <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Today</h1>
