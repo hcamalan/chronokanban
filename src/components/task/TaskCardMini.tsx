@@ -29,9 +29,9 @@ export function TaskCardMini({ task, onClick, selectMode, selected, onToggleSele
   return (
     <div
       onClick={selectMode ? onToggleSelect : onClick}
-      className={`flex cursor-pointer flex-col gap-1.5 rounded-md border border-gray-200 bg-white p-2.5 text-left shadow-sm hover:shadow dark:border-gray-700 dark:bg-gray-900 ${
-        isCompleted ? 'opacity-60' : ''
-      }`}
+      className={`flex cursor-pointer flex-col gap-1.5 rounded-md border border-gray-200 p-2.5 text-left shadow-sm hover:shadow dark:border-gray-700 ${
+        !isCompleted && task.timer.isRunning ? 'bg-blue-50 dark:bg-blue-950/40' : 'bg-white dark:bg-gray-900'
+      } ${isCompleted ? 'opacity-60' : ''}`}
     >
       <div className="flex items-start gap-2">
         {selectMode ? (

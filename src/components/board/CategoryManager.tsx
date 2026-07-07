@@ -17,30 +17,28 @@ export function CategoryManager({ boardId }: CategoryManagerProps) {
   const [newName, setNewName] = useState('')
 
   return (
-    <div className="mt-8 border-t border-gray-200 pt-4 dark:border-gray-700">
-      <h3 className="mb-2 text-sm font-medium text-gray-500 dark:text-gray-400">Categories</h3>
-      <ul className="mb-3 flex flex-wrap gap-2">
-        {categories.map((c) => (
-          <li
-            key={c.id}
-            className="flex items-center gap-1 rounded-full border border-gray-200 px-2 py-1 dark:border-gray-700"
+    <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-gray-200 pt-3 dark:border-gray-700">
+      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Categories</span>
+      {categories.map((c) => (
+        <div
+          key={c.id}
+          className="flex items-center gap-1 rounded-full border border-gray-200 px-2 py-1 dark:border-gray-700"
+        >
+          <ColorSwatchPicker value={c.color} onChange={(color) => updateCategory(c.id, { color })} />
+          <input
+            value={c.name}
+            onChange={(e) => updateCategory(c.id, { name: e.target.value })}
+            className="w-24 bg-transparent text-sm outline-none dark:text-gray-100"
+          />
+          <button
+            onClick={() => deleteCategory(c.id)}
+            className="text-xs text-gray-400 hover:text-red-500"
+            aria-label={`Delete category ${c.name}`}
           >
-            <ColorSwatchPicker value={c.color} onChange={(color) => updateCategory(c.id, { color })} />
-            <input
-              value={c.name}
-              onChange={(e) => updateCategory(c.id, { name: e.target.value })}
-              className="w-24 bg-transparent text-sm outline-none dark:text-gray-100"
-            />
-            <button
-              onClick={() => deleteCategory(c.id)}
-              className="text-xs text-gray-400 hover:text-red-500"
-              aria-label={`Delete category ${c.name}`}
-            >
-              ×
-            </button>
-          </li>
-        ))}
-      </ul>
+            ×
+          </button>
+        </div>
+      ))}
       <form
         onSubmit={(e) => {
           e.preventDefault()
