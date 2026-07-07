@@ -388,7 +388,7 @@ export function buildExampleBoardData(): {
 } {
   const now = Date.now()
   const boardId = crypto.randomUUID()
-  const board: Board = { id: boardId, name: 'Software Engineering', order: 0, createdAt: now - 60 * DAY }
+  const board: Board = { id: boardId, name: 'Software Engineering (Sample board)', order: 0, createdAt: now - 60 * DAY }
 
   const bucketDefs: { key: BucketKey; name: string }[] = [
     { key: 'backlog', name: 'Backlog' },
