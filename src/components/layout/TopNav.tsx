@@ -13,8 +13,8 @@ import {
 } from '../../db/exportImport'
 
 interface TopNavProps {
-  activeTab: 'boards' | 'dashboard' | 'howto'
-  onNavigate: (tab: 'boards' | 'dashboard' | 'howto') => void
+  activeTab: 'boards' | 'today' | 'dashboard' | 'howto'
+  onNavigate: (tab: 'boards' | 'today' | 'dashboard' | 'howto') => void
   hotkeysOpen: boolean
   onHotkeysOpenChange: (open: boolean) => void
 }
@@ -71,7 +71,7 @@ export function TopNav({ activeTab, onNavigate, hotkeysOpen, onHotkeysOpenChange
     }
   }
 
-  const tabClass = (tab: 'boards' | 'dashboard' | 'howto') =>
+  const tabClass = (tab: 'boards' | 'today' | 'dashboard' | 'howto') =>
     `rounded px-3 py-1.5 text-sm font-medium ${
       activeTab === tab
         ? 'bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900'
@@ -92,6 +92,9 @@ export function TopNav({ activeTab, onNavigate, hotkeysOpen, onHotkeysOpenChange
         <nav className="flex items-center gap-1">
           <button onClick={() => onNavigate('boards')} className={tabClass('boards')}>
             Boards
+          </button>
+          <button onClick={() => onNavigate('today')} className={tabClass('today')}>
+            Today
           </button>
           <button onClick={() => onNavigate('dashboard')} className={tabClass('dashboard')}>
             Dashboard

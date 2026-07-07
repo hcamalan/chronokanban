@@ -8,11 +8,13 @@ import { UndoToast } from './components/layout/UndoToast'
 import { BoardListView } from './components/boards/BoardListView'
 import { BoardDetailView } from './components/board/BoardDetailView'
 import { DashboardView } from './components/dashboard/DashboardView'
+import { TodayView } from './components/today/TodayView'
 import { TaskDetailModal } from './components/task/TaskDetailModal'
 
 type View =
   | { kind: 'boards' }
   | { kind: 'board'; boardId: string }
+  | { kind: 'today' }
   | { kind: 'dashboard' }
   | { kind: 'howto' }
 
@@ -131,6 +133,11 @@ function App() {
         setView({ kind: 'dashboard' })
         return
       }
+
+      if (!e.shiftKey && e.key.toLowerCase() === 't') {
+        setView({ kind: 'today' })
+        return
+      }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
@@ -159,6 +166,7 @@ function App() {
             onOpenTask={(taskId) => setSelectedTaskId(taskId)}
           />
         )}
+        {view.kind === 'today' && <TodayView onOpenTask={(taskId) => setSelectedTaskId(taskId)} />}
         {view.kind === 'dashboard' && (
           <DashboardView onOpenTask={(taskId) => setSelectedTaskId(taskId)} />
         )}

@@ -12,6 +12,7 @@ const SHORTCUTS: { key: string; action: string }[] = [
   { key: '[ / ]', action: 'Previous / next board' },
   { key: '1-9', action: 'Open that board (on the Boards list)' },
   { key: 'B', action: 'Go to Boards' },
+  { key: 'T', action: 'Go to Today' },
   { key: 'D', action: 'Go to Dashboard' },
   { key: 'Ctrl/Cmd+Z', action: 'Undo last delete' },
   { key: '/', action: 'Focus task search' },
