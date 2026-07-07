@@ -100,6 +100,20 @@ export function HowToView() {
         <SubChapter title="Resetting">
           <p>To reset a task's time back to zero, open its extended view — it's the only place with a Reset control.</p>
         </SubChapter>
+        <SubChapter title="Focus sessions">
+          <p>
+            Click <strong>Focus 25 min</strong> in a task's extended view to start a Pomodoro-style session: the
+            timer starts and a floating countdown appears. When the 25 minutes are up, the timer pauses
+            automatically and a 5-minute break begins. Stopping the session early leaves the timer running.
+          </p>
+        </SubChapter>
+        <SubChapter title="Estimates">
+          <p>
+            Give a task an <strong>Estimated hours</strong> value and ChronoKanban shows how tracked time compares
+            — inline in the task view (red when you've gone over), and on the Dashboard as an average across
+            completed tasks, so you learn how accurate your estimates really are.
+          </p>
+        </SubChapter>
       </Chapter>
 
       <Chapter title="Organizing & finding tasks">
@@ -115,6 +129,12 @@ export function HowToView() {
         </SubChapter>
         <SubChapter title="Sub-tasks">
           <p>Break a task down into a checklist of smaller steps from its extended view.</p>
+        </SubChapter>
+        <SubChapter title="Descriptions">
+          <p>
+            Task descriptions support <strong>markdown</strong> — links, bold, and lists render automatically, and
+            links open in a new tab. Click the rendered text to edit it.
+          </p>
         </SubChapter>
         <SubChapter title="Assignee">
           <p>
@@ -144,9 +164,20 @@ export function HowToView() {
         </p>
       </Chapter>
 
+      <Chapter title="Today view">
+        <p>
+          The <strong>Today</strong> tab (or the <strong>T</strong> key) is your daily agenda across all boards:
+          what's running right now, what's due today, what's overdue, what you've already completed today — and a
+          live total of the time you've tracked so far.
+        </p>
+      </Chapter>
+
       <Chapter title="Dashboard & Calendar">
         <SubChapter title="Effectiveness tiles">
-          <p>Two headline numbers: your on-time completion rate, and story points completed per hour tracked.</p>
+          <p>
+            Three headline numbers: your on-time completion rate, story points completed per hour tracked, and how
+            your tracked time compares to your estimates.
+          </p>
         </SubChapter>
         <SubChapter title="Configurable chart">
           <p>
@@ -185,6 +216,11 @@ export function HowToView() {
           Open <strong>Settings</strong> in the top bar to adjust dark mode, bucket width, date format, a
           colorblind-safe color mode, and whether task descriptions show directly on their cards.
         </p>
+        <p>
+          You can also enable <strong>desktop notifications</strong> there: ChronoKanban will warn you when a
+          timer has been running for over 8 hours, and give you a once-a-day summary of tasks due today or
+          overdue. Since there's no server, notifications only fire while the app is open in a tab.
+        </p>
       </Chapter>
 
       <Chapter title="Backing up your data">
@@ -192,6 +228,10 @@ export function HowToView() {
           Since everything is stored locally, clearing your browser data would erase it. Use <strong>Export</strong>{' '}
           any time to download a full backup as a JSON file, and <strong>Import</strong> to restore it later or move
           it to another browser or device. Importing replaces everything currently in the app, so use it carefully.
+        </p>
+        <p>
+          If it's been more than two weeks since your last export, the Boards page shows a gentle reminder — take
+          it seriously: a browser cleanup can wipe local data without asking.
         </p>
       </Chapter>
 
