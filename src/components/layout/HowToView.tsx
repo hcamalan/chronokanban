@@ -201,8 +201,7 @@ export function HowToView() {
           <p>
             Download the chart or calendar as a PNG image directly from their own download button, or use{' '}
             <strong>Download report</strong> to export a full CSV timesheet - one row per day and task you tracked
-            time on, with hours spent and the task's status at the end of that day. (Only time tracked with the
-            timer is included, from when this feature was added onward.)
+            time on, with hours spent and the task's status at the end of that day.
           </p>
         </SubChapter>
       </Chapter>
