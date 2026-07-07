@@ -12,6 +12,7 @@ export interface Preferences {
   dateFormat: DateFormat
   colorMode: ColorMode
   showDescriptionOnCard: boolean
+  notificationsEnabled: boolean
 }
 
 export interface Category {

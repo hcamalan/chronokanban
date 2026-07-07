@@ -3,6 +3,7 @@ import { useStore } from '../../store/useStore'
 import { DarkModeToggle } from './DarkModeToggle'
 import { ConfirmDialog } from '../boards/ConfirmDialog'
 import { BUCKET_WIDTH_OPTIONS } from '../../utils/bucketWidth'
+import { requestNotificationPermission } from '../../utils/notifications'
 import type { DateFormat, ColorMode } from '../../types'
 
 interface SettingsPanelProps {
@@ -113,6 +114,24 @@ export function SettingsPanel({ onDataDeleted }: SettingsPanelProps) {
               onChange={(e) => setPreference('showDescriptionOnCard', e.target.checked)}
             />
             Show description on card
+          </label>
+
+          <label className="mt-3 flex items-center gap-2 px-1 text-sm text-gray-700 dark:text-gray-200">
+            <input
+              type="checkbox"
+              checked={preferences.notificationsEnabled}
+              onChange={async (e) => {
+                if (e.target.checked) {
+                  const granted = await requestNotificationPermission()
+                  if (!granted) {
+                    window.alert('Notifications are blocked for this site — allow them in your browser settings first.')
+                    return
+                  }
+                }
+                setPreference('notificationsEnabled', e.target.checked)
+              }}
+            />
+            Desktop notifications
           </label>
 
           <div className="mt-3 border-t border-gray-200 pt-3 dark:border-gray-700">

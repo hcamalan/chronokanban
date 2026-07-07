@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useStore } from './store/useStore'
+import { useNotificationWatcher } from './hooks/useNotificationWatcher'
 import { TopNav } from './components/layout/TopNav'
 import { HowToView } from './components/layout/HowToView'
 import { Footer } from './components/layout/Footer'
@@ -22,6 +23,8 @@ function App() {
   const loaded = useStore((s) => s.loaded)
   const loadFromDB = useStore((s) => s.loadFromDB)
   const darkMode = useStore((s) => s.preferences.darkMode)
+
+  useNotificationWatcher()
 
   useEffect(() => {
     loadFromDB()

@@ -13,6 +13,7 @@ function defaultPreferences(): Preferences {
     dateFormat: 'DD/MM',
     colorMode: 'default',
     showDescriptionOnCard: false,
+    notificationsEnabled: false,
   }
 }
 
