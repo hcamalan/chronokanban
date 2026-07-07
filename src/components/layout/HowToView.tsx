@@ -20,19 +20,20 @@ function SubChapter({ title, children }: ChapterProps) {
   return (
     <div>
       <h3 className="mb-1 font-medium text-gray-800 dark:text-gray-200">{title}</h3>
-      <div className="text-sm">{children}</div>
+      <div>{children}</div>
     </div>
   )
 }
 
 export function HowToView() {
   return (
-    <div className="mx-auto max-w-3xl p-6 text-gray-700 dark:text-gray-300">
+    <div className="mx-auto max-w-3xl p-6 text-sm text-gray-700 dark:text-gray-300">
       <h1 className="mb-6 text-2xl font-semibold text-gray-900 dark:text-gray-100">How to use ChronoKanban</h1>
 
       <p className="mb-6">
-        ChronoKanban is a Kanban board with built-in time tracking. It runs entirely in your browser — there's no
-        account, no server, and nothing is ever sent anywhere. Your data lives only on this device.
+        ChronoKanban is the task tracking tool you didn't know you needed. It's a Kanban board with built-in time
+        tracking, analytics dashboards, and a calendar view — running entirely in your browser, with no account,
+        no server, and nothing ever sent anywhere.
       </p>
 
       <p className="mb-6">
