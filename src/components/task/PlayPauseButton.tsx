@@ -20,9 +20,9 @@ export function PlayPauseButton({ timer, onStart, onPause, size = 'sm' }: PlayPa
         type="button"
         onClick={() => (timer.isRunning ? onPause() : onStart())}
         aria-label={timer.isRunning ? 'Pause timer' : 'Start timer'}
-        className={`flex flex-shrink-0 items-center justify-center leading-none text-gray-900 hover:text-gray-600 dark:text-gray-100 dark:hover:text-gray-400 ${glyphSize}`}
+        className={`flex flex-shrink-0 items-center justify-center leading-none text-gray-900 dark:text-gray-100 ${glyphSize}`}
       >
-        {timer.isRunning ? '❚❚' : '▶'}
+        {timer.isRunning ? '⏸' : '▶'}
       </button>
       <span className={`font-mono text-gray-600 dark:text-gray-300 ${textSize}`}>
         {formatDuration(elapsed)}

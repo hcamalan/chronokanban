@@ -1,7 +1,7 @@
 import type { TaskCard } from '../../types'
 import { useStore } from '../../store/useStore'
 import { PlayPauseButton } from './PlayPauseButton'
-import { formatDuration } from '../../utils/time'
+import { formatDuration, formatDateShort } from '../../utils/time'
 
 interface TaskCardMiniProps {
   task: TaskCard
@@ -24,7 +24,6 @@ export function TaskCardMini({ task, onClick }: TaskCardMiniProps) {
       className={`flex cursor-pointer flex-col gap-1.5 rounded-md border border-gray-200 bg-white p-2.5 text-left shadow-sm hover:shadow dark:border-gray-700 dark:bg-gray-900 ${
         isCompleted ? 'opacity-60' : ''
       }`}
-      style={category ? { borderLeft: `4px solid ${category.color}` } : undefined}
     >
       <div className="flex items-start gap-2">
         <input
@@ -54,7 +53,7 @@ export function TaskCardMini({ task, onClick }: TaskCardMiniProps) {
         )}
         {task.dueDate && (
           <span className="rounded-full bg-gray-100 px-1.5 py-0.5 text-gray-600 dark:bg-gray-800 dark:text-gray-300">
-            {task.dueDate}
+            {formatDateShort(task.dueDate)}
           </span>
         )}
         {task.urgency === 'high' && <span className={highTagClass}>U</span>}

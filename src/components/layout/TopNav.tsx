@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { useStore } from '../../store/useStore'
 import { ImportConflictDialog } from '../boards/ImportConflictDialog'
-import { DarkModeToggle } from './DarkModeToggle'
+import { SettingsPanel } from './SettingsPanel'
 import {
   parseImportFile,
   findBoardConflicts,
@@ -124,7 +124,7 @@ export function TopNav({ activeTab, onNavigate }: TopNavProps) {
           onChange={handleFileSelected}
           className="hidden"
         />
-        <DarkModeToggle />
+        <SettingsPanel />
       </div>
 
       {importFlow && (

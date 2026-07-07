@@ -14,6 +14,12 @@ export function isLate(task: TaskCard, now: number = Date.now()): boolean {
   return new Date(`${task.dueDate}T23:59:59`).getTime() < now
 }
 
+/** Formats a YYYY-MM-DD date string as DD/MM for compact display (string split, no timezone conversion). */
+export function formatDateShort(dateStr: string): string {
+  const [, m, d] = dateStr.split('-')
+  return `${d}/${m}`
+}
+
 /** Minute-precision H:MM for the editable "Time elapsed" field (unbounded hours). */
 export function formatHHMM(totalSeconds: number): string {
   const totalMinutes = Math.round(Math.max(0, totalSeconds) / 60)

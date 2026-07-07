@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { useStore } from '../../store/useStore'
+import { CATEGORY_COLORS, ColorSwatchPicker } from './ColorSwatchPicker'
 
 interface CategoryManagerProps {
   boardId: string
@@ -24,12 +25,7 @@ export function CategoryManager({ boardId }: CategoryManagerProps) {
             key={c.id}
             className="flex items-center gap-1 rounded-full border border-gray-200 px-2 py-1 dark:border-gray-700"
           >
-            <input
-              type="color"
-              value={c.color}
-              onChange={(e) => updateCategory(c.id, { color: e.target.value })}
-              className="h-4 w-4 cursor-pointer border-none bg-transparent p-0"
-            />
+            <ColorSwatchPicker value={c.color} onChange={(color) => updateCategory(c.id, { color })} />
             <input
               value={c.name}
               onChange={(e) => updateCategory(c.id, { name: e.target.value })}
@@ -49,7 +45,7 @@ export function CategoryManager({ boardId }: CategoryManagerProps) {
         onSubmit={(e) => {
           e.preventDefault()
           if (!newName.trim()) return
-          addCategory(boardId, newName.trim(), '#94a3b8')
+          addCategory(boardId, newName.trim(), CATEGORY_COLORS[0])
           setNewName('')
         }}
         className="flex gap-2"

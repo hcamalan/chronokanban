@@ -158,18 +158,26 @@ export function BoardDetailView({ boardId, onBack, onOpenTask }: BoardDetailView
             </h1>
           )}
         </div>
-        <button
-          onClick={() => {
-            if (buckets.length === 0) return
-            const newTaskId = addTaskAtTop(boardId, buckets[0].id)
-            onOpenTask(newTaskId)
-          }}
-          disabled={buckets.length === 0}
-          title={buckets.length === 0 ? 'Add a bucket first' : undefined}
-          className="rounded bg-gray-900 px-3 py-1.5 text-sm text-white hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-40 dark:bg-gray-100 dark:text-gray-900"
-        >
-          Add task
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => addBucket(boardId, 'New bucket')}
+            className="rounded bg-gray-900 px-3 py-1.5 text-sm text-white hover:bg-gray-700 dark:bg-gray-100 dark:text-gray-900"
+          >
+            Add bucket
+          </button>
+          <button
+            onClick={() => {
+              if (buckets.length === 0) return
+              const newTaskId = addTaskAtTop(boardId, buckets[0].id)
+              onOpenTask(newTaskId)
+            }}
+            disabled={buckets.length === 0}
+            title={buckets.length === 0 ? 'Add a bucket first' : undefined}
+            className="rounded bg-gray-900 px-3 py-1.5 text-sm text-white hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-40 dark:bg-gray-100 dark:text-gray-900"
+          >
+            Add task
+          </button>
+        </div>
       </div>
 
       <DndContext
