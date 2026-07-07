@@ -109,6 +109,12 @@ export function TopNav({ activeTab, onNavigate, hotkeysOpen, onHotkeysOpenChange
         >
           ♥ Donate
         </a>
+        <a
+          href="mailto:chronokanban@pm.me?subject=ChronoKanban feedback"
+          className="rounded px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+        >
+          Send feedback
+        </a>
         <button
           onClick={() => exportData()}
           className="rounded px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
