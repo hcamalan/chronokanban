@@ -1,9 +1,8 @@
 import { useState } from 'react'
 import { useStore } from '../../store/useStore'
-import { getLastExportAt, getSnoozeUntil, snoozeBackupNudge } from '../../store/backupStorage'
+import { getLastExportAt, getSnoozeUntil, snoozeBackupNudge, SNOOZE_DAYS } from '../../store/backupStorage'
 
-const NUDGE_AFTER_DAYS = 14
-const SNOOZE_DAYS = 3
+const NUDGE_AFTER_DAYS = 7
 
 export function BackupNudge() {
   const hasBoards = useStore((s) => Object.keys(s.boards).length > 0)
