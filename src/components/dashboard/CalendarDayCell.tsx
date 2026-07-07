@@ -80,7 +80,7 @@ export function CalendarDayCell({
               key={`w-${bar.taskId}`}
               onClick={() => onOpenTask(bar.taskId)}
               title={`${bar.taskName} — ${formatHours(bar.seconds)}`}
-              className="truncate rounded px-1.5 py-0.5 text-left text-xs text-white"
+              className="min-h-5 truncate rounded px-1.5 py-0.5 text-left text-xs text-white"
               style={{ backgroundColor: bar.color }}
             >
               {bar.taskName}
@@ -90,7 +90,7 @@ export function CalendarDayCell({
               key={`d-${bar.taskId}`}
               onClick={() => onOpenTask(bar.taskId)}
               title={bar.taskName}
-              className="flex items-center gap-1 truncate rounded border-2 bg-transparent px-1 py-0.5 text-left text-xs"
+              className="flex min-h-5 items-center gap-1 truncate rounded border-2 bg-transparent px-1 py-0.5 text-left text-xs"
               style={{ borderColor: bar.color, color: bar.color }}
             >
               {bar.late && (
