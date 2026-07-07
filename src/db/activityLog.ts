@@ -1,4 +1,4 @@
-import { putActivityLogEntry, getAllActivityLog } from './repository'
+import { putActivityLogEntry, getAllActivityLog, deleteActivityLogEntry } from './repository'
 import type { ActivityActionType, ActivityLogEntry, TaskStatus } from '../types'
 
 const STATUS_LABELS: Record<TaskStatus, string> = {
@@ -26,6 +26,26 @@ export function logActivity(
     adjustmentSeconds,
   }
   putActivityLogEntry(entry)
+}
+
+/**
+ * Deletes the logged work time (closed segments + manual adjustments) for `taskId` since its
+ * last `'timer-reset'` entry (or since `sinceFallback`, usually the task's `createdAt`, if it has
+ * never been reset). So resetting a timer only undoes the current run, not earlier reported days.
+ */
+export async function purgeCurrentRunLog(taskId: string, sinceFallback: number): Promise<void> {
+  const entries = await getAllActivityLog()
+  const taskEntries = entries.filter((e) => e.taskId === taskId)
+  const lastReset = taskEntries
+    .filter((e) => e.actionType === 'timer-reset')
+    .reduce((latest, e) => (e.timestamp > latest ? e.timestamp : latest), -Infinity)
+  const boundary = lastReset === -Infinity ? sinceFallback : lastReset
+  const toDelete = taskEntries.filter(
+    (e) =>
+      e.timestamp > boundary &&
+      (e.segmentStart != null || (e.actionType === 'manual-adjustment' && e.adjustmentSeconds != null)),
+  )
+  await Promise.all(toDelete.map((e) => deleteActivityLogEntry(e.id)))
 }
 
 function csvEscape(value: string): string {

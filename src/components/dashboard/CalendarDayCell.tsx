@@ -5,6 +5,7 @@ export interface WorkedOnBar {
   taskName: string
   color: string
   seconds: number
+  storyPoints: number | null
 }
 
 export interface DueBar {
@@ -12,6 +13,7 @@ export interface DueBar {
   taskName: string
   color: string
   late: boolean
+  storyPoints: number | null
 }
 
 interface CalendarDayCellProps {

@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import * as repo from '../db/repository'
 import { buildExportFile, downloadExportFile } from '../db/exportImport'
-import { logActivity, downloadTimesheetCsv, type WorkInterval } from '../db/activityLog'
+import { logActivity, downloadTimesheetCsv, purgeCurrentRunLog, type WorkInterval } from '../db/activityLog'
 import { createDebouncer } from './persist'
 import { loadPreferences, savePreferences } from './preferencesStorage'
 import { addToDateString } from '../utils/time'
@@ -536,7 +536,11 @@ export const useStore = create<AppState>((set, get) => {
     const updated: TaskCard = { ...task, timer: { isRunning: false, elapsedSeconds: 0, startedAt: null } }
     set((state) => ({ tasks: { ...state.tasks, [taskId]: updated } }))
     repo.putTask(updated)
-    logActivity(taskId, task.name, 'timer-reset', updated.status)
+    // Undo only the current run's logged time (since the last reset, or since creation) — purge
+    // before logging the new reset entry so it can't affect its own boundary calculation.
+    purgeCurrentRunLog(taskId, task.createdAt).then(() => {
+      logActivity(taskId, task.name, 'timer-reset', updated.status)
+    })
   },
   setElapsedTime: (taskId, newElapsedSeconds) => {
     const task = get().tasks[taskId]

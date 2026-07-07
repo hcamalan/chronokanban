@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   BarChart,
   Bar,
@@ -13,6 +13,7 @@ import {
 } from 'recharts'
 import { useStore } from '../../store/useStore'
 import { MultiSelectDropdown } from './MultiSelectDropdown'
+import { DownloadImageButton } from './DownloadImageButton'
 import {
   buildChartData,
   GROUP_BY_OPTIONS,
@@ -39,6 +40,7 @@ const selectClass =
 
 export function ConfigurableChart({ tasks, categories, categoryEnabled }: ConfigurableChartProps) {
   const colorMode = useStore((s) => s.preferences.colorMode)
+  const cardRef = useRef<HTMLDivElement>(null)
   const [chartType, setChartType] = useState<'bar' | 'pie'>('bar')
   const [config, setConfig] = useState<ChartConfig>({
     groupBy: 'status',
@@ -81,7 +83,10 @@ export function ConfigurableChart({ tasks, categories, categoryEnabled }: Config
     setConfig((c) => ({ ...c, [key]: value }))
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
+    <div
+      ref={cardRef}
+      className="relative rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900"
+    >
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <label className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-300">
           Measure
@@ -194,6 +199,8 @@ export function ConfigurableChart({ tasks, categories, categoryEnabled }: Config
           </PieChart>
         </ResponsiveContainer>
       )}
+
+      <DownloadImageButton targetRef={cardRef} filename="chronokanban-chart.png" />
     </div>
   )
 }

@@ -96,6 +96,10 @@ export async function putActivityLogEntry(entry: ActivityLogEntry) {
   const db = await getDB()
   await db.put('activityLog', entry)
 }
+export async function deleteActivityLogEntry(id: string) {
+  const db = await getDB()
+  await db.delete('activityLog', id)
+}
 
 export async function bulkPutAll(data: {
   boards: Board[]
