@@ -13,6 +13,7 @@ import { useStore } from '../../store/useStore'
 import { SortableBoardCard } from './SortableBoardCard'
 import { ConfirmDialog } from './ConfirmDialog'
 import { RunningTimersBanner } from './RunningTimersBanner'
+import { BackupNudge } from './BackupNudge'
 
 interface BoardListViewProps {
   onOpenBoard: (boardId: string) => void
@@ -54,6 +55,7 @@ export function BoardListView({ onOpenBoard }: BoardListViewProps) {
         boardCount={runningBoardCount}
         onPauseAll={() => pauseAllTimers()}
       />
+      <BackupNudge />
       <h1 className="mb-6 text-2xl font-semibold text-gray-900 dark:text-gray-100">Boards</h1>
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext items={boards.map((b) => b.id)} strategy={rectSortingStrategy}>

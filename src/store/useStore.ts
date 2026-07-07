@@ -4,6 +4,7 @@ import { buildExportFile, downloadExportFile } from '../db/exportImport'
 import { logActivity, downloadTimesheetCsv, purgeCurrentRunLog, type WorkInterval } from '../db/activityLog'
 import { createDebouncer } from './persist'
 import { loadPreferences, savePreferences } from './preferencesStorage'
+import { markExported } from './backupStorage'
 import { addToDateString } from '../utils/time'
 import type { Board, Bucket, TaskCard, Category, Preferences } from '../types'
 
@@ -660,6 +661,7 @@ export const useStore = create<AppState>((set, get) => {
   exportData: async () => {
     const data = await buildExportFile()
     downloadExportFile(data)
+    markExported()
   },
   downloadActivityLog: async () => {
     const now = Date.now()
