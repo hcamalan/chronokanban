@@ -25,9 +25,9 @@ export function DonatePanel() {
         <div className="absolute right-0 z-20 mt-1 w-72 rounded border border-gray-200 bg-white p-3 shadow-lg dark:border-gray-700 dark:bg-gray-800">
           <h3 className="mb-2 text-xs font-medium text-gray-500 dark:text-gray-400">Support ChronoKanban</h3>
           <p className="text-sm text-gray-600 dark:text-gray-300">
-            ChronoKanban is, and will remain, completely free to use. That said, developing and maintaining it
-            carries real costs, including the AI tooling used to build it — if you've found it valuable, any
-            contribution toward those costs is sincerely appreciated, though never expected.
+            ChronoKanban is completely free to use, at least for the time being. That said, developing and
+            maintaining it carries real costs, especially the AI tooling used to build it - if you've found it
+            valuable, any contribution toward those costs is sincerely appreciated.
           </p>
           <a
             href="https://paypal.me/HuseyinCamalan"
