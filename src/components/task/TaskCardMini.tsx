@@ -1,14 +1,13 @@
 import type { TaskCard } from '../../types'
 import { useStore } from '../../store/useStore'
 import { PlayPauseButton } from './PlayPauseButton'
-import { formatDuration, formatDateShort } from '../../utils/time'
+import { formatDuration, formatDate } from '../../utils/time'
+import { getSemanticColors, remapCategoryColor } from '../../utils/colorPalette'
 
 interface TaskCardMiniProps {
   task: TaskCard
   onClick: () => void
 }
-
-const highTagClass = 'rounded-full bg-red-100 px-1.5 py-0.5 font-semibold text-red-700 dark:bg-red-900 dark:text-red-200'
 
 export function TaskCardMini({ task, onClick }: TaskCardMiniProps) {
   const category = useStore((s) => (task.categoryId ? s.categories[task.categoryId] : undefined))
@@ -16,7 +15,12 @@ export function TaskCardMini({ task, onClick }: TaskCardMiniProps) {
   const pauseTimer = useStore((s) => s.pauseTimer)
   const completeTask = useStore((s) => s.completeTask)
   const uncompleteTask = useStore((s) => s.uncompleteTask)
+  const dateFormat = useStore((s) => s.preferences.dateFormat)
+  const colorMode = useStore((s) => s.preferences.colorMode)
+  const showDescriptionOnCard = useStore((s) => s.preferences.showDescriptionOnCard)
   const isCompleted = task.status === 'completed'
+  const categoryColor = category ? remapCategoryColor(category.color, colorMode) : undefined
+  const highTagColor = getSemanticColors(colorMode).level.high
 
   return (
     <div
@@ -46,19 +50,36 @@ export function TaskCardMini({ task, onClick }: TaskCardMiniProps) {
         {category && (
           <span
             className="rounded-full px-1.5 py-0.5"
-            style={{ backgroundColor: `${category.color}33`, color: category.color }}
+            style={{ backgroundColor: `${categoryColor}33`, color: categoryColor }}
           >
             {category.name}
           </span>
         )}
         {task.dueDate && (
           <span className="rounded-full bg-gray-100 px-1.5 py-0.5 text-gray-600 dark:bg-gray-800 dark:text-gray-300">
-            {formatDateShort(task.dueDate)}
+            {formatDate(task.dueDate, dateFormat)}
           </span>
         )}
-        {task.urgency === 'high' && <span className={highTagClass}>U</span>}
-        {task.importance === 'high' && <span className={highTagClass}>I</span>}
+        {task.urgency === 'high' && (
+          <span
+            className="rounded-full px-1.5 py-0.5 font-semibold"
+            style={{ backgroundColor: `${highTagColor}33`, color: highTagColor }}
+          >
+            U
+          </span>
+        )}
+        {task.importance === 'high' && (
+          <span
+            className="rounded-full px-1.5 py-0.5 font-semibold"
+            style={{ backgroundColor: `${highTagColor}33`, color: highTagColor }}
+          >
+            I
+          </span>
+        )}
       </div>
+      {showDescriptionOnCard && task.description.trim() && (
+        <p className="line-clamp-3 text-xs text-gray-500 dark:text-gray-400">{task.description}</p>
+      )}
       {isCompleted ? (
         <span className="font-mono text-xs text-gray-400 dark:text-gray-500">
           {formatDuration(task.timer.elapsedSeconds)}

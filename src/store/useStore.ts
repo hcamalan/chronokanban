@@ -3,7 +3,8 @@ import * as repo from '../db/repository'
 import { buildExportFile, downloadExportFile } from '../db/exportImport'
 import { logActivity, downloadTimesheetCsv, type WorkInterval } from '../db/activityLog'
 import { createDebouncer } from './persist'
-import type { Board, Bucket, TaskCard, Category } from '../types'
+import { loadPreferences, savePreferences } from './preferencesStorage'
+import type { Board, Bucket, TaskCard, Category, Preferences } from '../types'
 
 const debouncedPutTask = createDebouncer((task: TaskCard) => {
   repo.putTask(task)
@@ -19,8 +20,10 @@ interface AppState {
   tasks: Record<string, TaskCard>
   categories: Record<string, Category>
   loaded: boolean
+  preferences: Preferences
 
   loadFromDB: () => Promise<void>
+  setPreference: <K extends keyof Preferences>(key: K, value: Preferences[K]) => void
 
   addBoard: (name: string) => string
   renameBoard: (id: string, name: string) => void
@@ -61,6 +64,13 @@ export const useStore = create<AppState>((set, get) => ({
   tasks: {},
   categories: {},
   loaded: false,
+  preferences: loadPreferences(),
+
+  setPreference: (key, value) => {
+    const preferences = { ...get().preferences, [key]: value }
+    set({ preferences })
+    savePreferences(preferences)
+  },
 
   loadFromDB: async () => {
     const [boards, buckets, tasks, categories] = await Promise.all([

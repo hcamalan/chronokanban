@@ -16,6 +16,7 @@ import { BucketColumn, bucketSortableId } from './BucketColumn'
 import { CategoryManager } from './CategoryManager'
 import { completedDroppableId } from './CompletedSection'
 import { TaskCardMini } from '../task/TaskCardMini'
+import { bucketWidthClass } from '../../utils/bucketWidth'
 
 interface BoardDetailViewProps {
   boardId: string
@@ -38,6 +39,7 @@ export function BoardDetailView({ boardId, onBack, onOpenTask }: BoardDetailView
   const addTaskAtTop = useStore((s) => s.addTaskAtTop)
   const moveTask = useStore((s) => s.moveTask)
   const reorderBuckets = useStore((s) => s.reorderBuckets)
+  const bucketWidth = useStore((s) => s.preferences.bucketWidth)
   const [editingName, setEditingName] = useState(false)
   const [name, setName] = useState(board?.name ?? '')
   const [newBucketName, setNewBucketName] = useState('')
@@ -198,7 +200,7 @@ export function BoardDetailView({ boardId, onBack, onOpenTask }: BoardDetailView
                 addBucket(boardId, newBucketName.trim())
                 setNewBucketName('')
               }}
-              className="flex h-fit w-64 flex-shrink-0 flex-col gap-2 rounded-lg border-2 border-dashed border-gray-300 p-3 dark:border-gray-600"
+              className={`flex h-fit ${bucketWidthClass(bucketWidth)} flex-shrink-0 flex-col gap-2 rounded-lg border-2 border-dashed border-gray-300 p-3 dark:border-gray-600`}
             >
               <input
                 value={newBucketName}

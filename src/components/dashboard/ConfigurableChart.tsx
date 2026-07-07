@@ -11,6 +11,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts'
+import { useStore } from '../../store/useStore'
 import { MultiSelectDropdown } from './MultiSelectDropdown'
 import {
   buildChartData,
@@ -37,6 +38,7 @@ const selectClass =
   'rounded border border-gray-300 px-2 py-1 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100'
 
 export function ConfigurableChart({ tasks, categories, categoryEnabled }: ConfigurableChartProps) {
+  const colorMode = useStore((s) => s.preferences.colorMode)
   const [chartType, setChartType] = useState<'bar' | 'pie'>('bar')
   const [config, setConfig] = useState<ChartConfig>({
     groupBy: 'status',
@@ -62,8 +64,14 @@ export function ConfigurableChart({ tasks, categories, categoryEnabled }: Config
   ]
 
   const data = useMemo(
-    () => buildChartData(tasks, categories, { ...config, categoryIds: categoryEnabled ? config.categoryIds : [] }),
-    [tasks, categories, config, categoryEnabled],
+    () =>
+      buildChartData(
+        tasks,
+        categories,
+        { ...config, categoryIds: categoryEnabled ? config.categoryIds : [] },
+        colorMode,
+      ),
+    [tasks, categories, config, categoryEnabled, colorMode],
   )
 
   const unitLabel = UNIT_TOOLTIP_LABEL[config.unit]

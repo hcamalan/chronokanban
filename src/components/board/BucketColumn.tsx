@@ -6,6 +6,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { useStore } from '../../store/useStore'
 import { SortableTaskCardMini } from '../task/SortableTaskCardMini'
 import { CompletedSection } from './CompletedSection'
+import { bucketWidthClass } from '../../utils/bucketWidth'
 import type { Bucket } from '../../types'
 
 interface BucketColumnProps {
@@ -35,6 +36,7 @@ export function BucketColumn({ bucket, onOpenTask }: BucketColumnProps) {
   const renameBucket = useStore((s) => s.renameBucket)
   const deleteBucket = useStore((s) => s.deleteBucket)
   const addTask = useStore((s) => s.addTask)
+  const bucketWidth = useStore((s) => s.preferences.bucketWidth)
   const [editingName, setEditingName] = useState(false)
   const [name, setName] = useState(bucket.name)
   const [newTaskName, setNewTaskName] = useState('')
@@ -58,7 +60,7 @@ export function BucketColumn({ bucket, onOpenTask }: BucketColumnProps) {
       }}
       {...attributes}
       {...listeners}
-      className="flex w-64 flex-shrink-0 flex-col rounded-lg bg-gray-100 p-3 dark:bg-gray-800/60"
+      className={`flex ${bucketWidthClass(bucketWidth)} flex-shrink-0 flex-col rounded-lg bg-gray-100 p-3 dark:bg-gray-800/60`}
     >
       <div className="mb-2 flex items-center justify-between">
         {editingName ? (

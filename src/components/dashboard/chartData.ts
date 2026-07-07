@@ -1,10 +1,9 @@
 import { isLate } from '../../utils/time'
-import type { TaskCard, Category, TaskStatus } from '../../types'
+import { getSemanticColors, remapCategoryColor, type Level, type Lateness } from '../../utils/colorPalette'
+import type { TaskCard, Category, TaskStatus, ColorMode } from '../../types'
 
 export type GroupByDim = 'category' | 'status' | 'importance' | 'urgency' | 'late'
 export type Unit = 'count' | 'time' | 'points'
-type Level = 'low' | 'medium' | 'high'
-type Lateness = 'late' | 'not-late'
 
 /** Sentinel category id for tasks with no category. */
 export const UNCATEGORIZED = '__uncat__'
@@ -72,18 +71,6 @@ export const UNIT_TOOLTIP_LABEL: Record<Unit, string> = {
   points: 'Story points',
 }
 
-// Semantic, CVD-distinct palette (validated — worst adjacent ΔE 21.4). Each mark is always
-// paired with a visible label, so gray reads as the neutral "none" state without ambiguity.
-const STATUS_COLORS: Record<TaskStatus, string> = {
-  'not-started': '#9ca3af',
-  'in-progress': '#3b82f6',
-  completed: '#22c55e',
-}
-const LEVEL_COLORS: Record<Level, string> = { low: '#22c55e', medium: '#f59e0b', high: '#ef4444' }
-const LATE_COLORS: Record<Lateness, string> = { late: '#ef4444', 'not-late': '#22c55e' }
-const UNCATEGORIZED_COLOR = '#9ca3af'
-const NONE_LEVEL_COLOR = '#9ca3af'
-
 function taskSeconds(t: TaskCard, now: number): number {
   return t.timer.elapsedSeconds + (t.timer.isRunning && t.timer.startedAt != null ? (now - t.timer.startedAt) / 1000 : 0)
 }
@@ -119,22 +106,27 @@ function groupKey(t: TaskCard, dim: GroupByDim): string {
 }
 
 /** The ordered set of possible buckets for a grouping dimension, with labels and colors. */
-function bucketsForDim(dim: GroupByDim, categories: Category[]): { key: string; label: string; color: string }[] {
+function bucketsForDim(
+  dim: GroupByDim,
+  categories: Category[],
+  mode: ColorMode,
+): { key: string; label: string; color: string }[] {
+  const semantic = getSemanticColors(mode)
   switch (dim) {
     case 'status':
-      return STATUS_OPTIONS.map((o) => ({ key: o.value, label: o.label, color: STATUS_COLORS[o.value] }))
+      return STATUS_OPTIONS.map((o) => ({ key: o.value, label: o.label, color: semantic.status[o.value] }))
     case 'importance':
     case 'urgency':
       return [
-        ...LEVEL_OPTIONS.map((o) => ({ key: o.value, label: o.label, color: LEVEL_COLORS[o.value] })),
-        { key: NONE_LEVEL, label: 'None', color: NONE_LEVEL_COLOR },
+        ...LEVEL_OPTIONS.map((o) => ({ key: o.value, label: o.label, color: semantic.level[o.value] })),
+        { key: NONE_LEVEL, label: 'None', color: semantic.none },
       ]
     case 'late':
-      return LATE_OPTIONS.map((o) => ({ key: o.value, label: o.label, color: LATE_COLORS[o.value] }))
+      return LATE_OPTIONS.map((o) => ({ key: o.value, label: o.label, color: semantic.late[o.value] }))
     case 'category':
       return [
-        ...categories.map((c) => ({ key: c.id, label: c.name, color: c.color })),
-        { key: UNCATEGORIZED, label: 'Uncategorized', color: UNCATEGORIZED_COLOR },
+        ...categories.map((c) => ({ key: c.id, label: c.name, color: remapCategoryColor(c.color, mode) })),
+        { key: UNCATEGORIZED, label: 'Uncategorized', color: semantic.uncategorized },
       ]
   }
 }
@@ -143,6 +135,7 @@ export function buildChartData(
   tasks: TaskCard[],
   categories: Category[],
   config: ChartConfig,
+  colorMode: ColorMode = 'default',
   now: number = Date.now(),
 ): ChartDatum[] {
   const totals = new Map<string, number>()
@@ -152,7 +145,7 @@ export function buildChartData(
     totals.set(key, (totals.get(key) ?? 0) + measure(t, config.unit, now))
   }
 
-  return bucketsForDim(config.groupBy, categories)
+  return bucketsForDim(config.groupBy, categories, colorMode)
     .map((b) => ({ ...b, value: Math.round((totals.get(b.key) ?? 0) * 100) / 100 }))
     // Recharts 3.9.2 fails to render any bars if a datum is exactly 0, so empty/zero buckets are dropped.
     .filter((d) => d.value > 0)

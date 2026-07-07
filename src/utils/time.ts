@@ -1,4 +1,4 @@
-import type { TaskCard } from '../types'
+import type { TaskCard, DateFormat } from '../types'
 
 export function formatDuration(totalSeconds: number): string {
   const seconds = Math.max(0, Math.floor(totalSeconds))
@@ -14,10 +14,21 @@ export function isLate(task: TaskCard, now: number = Date.now()): boolean {
   return new Date(`${task.dueDate}T23:59:59`).getTime() < now
 }
 
-/** Formats a YYYY-MM-DD date string as DD/MM for compact display (string split, no timezone conversion). */
-export function formatDateShort(dateStr: string): string {
-  const [, m, d] = dateStr.split('-')
-  return `${d}/${m}`
+/** Formats a YYYY-MM-DD date string per the given display preference (string split, no timezone conversion). */
+export function formatDate(dateStr: string, format: DateFormat): string {
+  const [y, m, d] = dateStr.split('-')
+  switch (format) {
+    case 'DD/MM':
+      return `${d}/${m}`
+    case 'MM/DD':
+      return `${m}/${d}`
+    case 'DD/MM/YYYY':
+      return `${d}/${m}/${y}`
+    case 'MM/DD/YYYY':
+      return `${m}/${d}/${y}`
+    case 'YYYY-MM-DD':
+      return `${y}-${m}-${d}`
+  }
 }
 
 /** Minute-precision H:MM for the editable "Time elapsed" field (unbounded hours). */

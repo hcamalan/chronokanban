@@ -2,6 +2,18 @@ export type Urgency = 'low' | 'medium' | 'high'
 export type Importance = 'low' | 'medium' | 'high'
 export type TaskStatus = 'not-started' | 'in-progress' | 'completed'
 
+export type BucketWidth = 'narrow' | 'default' | 'wide' | 'xwide'
+export type DateFormat = 'DD/MM' | 'MM/DD' | 'DD/MM/YYYY' | 'MM/DD/YYYY' | 'YYYY-MM-DD'
+export type ColorMode = 'default' | 'colorblind-safe'
+
+export interface Preferences {
+  darkMode: boolean
+  bucketWidth: BucketWidth
+  dateFormat: DateFormat
+  colorMode: ColorMode
+  showDescriptionOnCard: boolean
+}
+
 export interface Category {
   id: string
   boardId: string

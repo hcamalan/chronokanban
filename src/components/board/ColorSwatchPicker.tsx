@@ -1,19 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
+import { useStore } from '../../store/useStore'
+import { CATEGORY_COLOR_PRESETS, remapCategoryColor } from '../../utils/colorPalette'
 
-export const CATEGORY_COLORS = [
-  '#9ca3af',
-  '#ef4444',
-  '#f97316',
-  '#f59e0b',
-  '#84cc16',
-  '#22c55e',
-  '#14b8a6',
-  '#06b6d4',
-  '#3b82f6',
-  '#6366f1',
-  '#a855f7',
-  '#ec4899',
-]
+export const CATEGORY_COLORS = CATEGORY_COLOR_PRESETS.default
 
 interface ColorSwatchPickerProps {
   value: string
@@ -21,6 +10,9 @@ interface ColorSwatchPickerProps {
 }
 
 export function ColorSwatchPicker({ value, onChange }: ColorSwatchPickerProps) {
+  const colorMode = useStore((s) => s.preferences.colorMode)
+  const swatches = CATEGORY_COLOR_PRESETS[colorMode]
+  const displayValue = remapCategoryColor(value, colorMode)
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
@@ -40,21 +32,21 @@ export function ColorSwatchPicker({ value, onChange }: ColorSwatchPickerProps) {
         onClick={() => setOpen((o) => !o)}
         aria-label="Choose category color"
         className="h-4 w-4 flex-shrink-0 cursor-pointer rounded-full"
-        style={{ backgroundColor: value }}
+        style={{ backgroundColor: displayValue }}
       />
       {open && (
         <div className="absolute z-20 mt-1 grid w-40 grid-cols-6 gap-1 rounded border border-gray-200 bg-white p-1.5 shadow-lg dark:border-gray-700 dark:bg-gray-800">
-          {CATEGORY_COLORS.map((color) => (
+          {swatches.map((color, i) => (
             <button
               key={color}
               type="button"
               onClick={() => {
-                onChange(color)
+                onChange(CATEGORY_COLOR_PRESETS.default[i])
                 setOpen(false)
               }}
               aria-label={`Set color ${color}`}
               className="h-5 w-5 rounded-full"
-              style={{ backgroundColor: color, outline: color === value ? '2px solid currentColor' : undefined }}
+              style={{ backgroundColor: color, outline: color === displayValue ? '2px solid currentColor' : undefined }}
             />
           ))}
         </div>

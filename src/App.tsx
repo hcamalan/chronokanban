@@ -21,10 +21,15 @@ function App() {
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null)
   const loaded = useStore((s) => s.loaded)
   const loadFromDB = useStore((s) => s.loadFromDB)
+  const darkMode = useStore((s) => s.preferences.darkMode)
 
   useEffect(() => {
     loadFromDB()
   }, [loadFromDB])
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', darkMode)
+  }, [darkMode])
 
   if (!loaded) {
     return <div className="p-6 text-gray-500 dark:text-gray-400">Loading...</div>

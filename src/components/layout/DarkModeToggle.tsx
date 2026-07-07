@@ -1,22 +1,18 @@
-import { useEffect, useState } from 'react'
-
-const STORAGE_KEY = 'chrono-kanban-dark-mode'
+import { useStore } from '../../store/useStore'
+import { ToggleSwitch } from './ToggleSwitch'
 
 export function DarkModeToggle() {
-  const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark'))
-
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', isDark)
-    localStorage.setItem(STORAGE_KEY, isDark ? 'dark' : 'light')
-  }, [isDark])
+  const darkMode = useStore((s) => s.preferences.darkMode)
+  const setPreference = useStore((s) => s.setPreference)
 
   return (
-    <button
-      onClick={() => setIsDark((d) => !d)}
-      aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-      className="rounded px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
-    >
-      {isDark ? '☀️' : '🌙'}
-    </button>
+    <div className="flex items-center justify-between gap-3 px-1 py-1">
+      <span className="text-sm text-gray-700 dark:text-gray-200">Dark mode</span>
+      <ToggleSwitch
+        checked={darkMode}
+        onChange={(checked) => setPreference('darkMode', checked)}
+        label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+      />
+    </div>
   )
 }

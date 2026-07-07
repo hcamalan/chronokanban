@@ -7,9 +7,12 @@
     <title>ChronoKanban</title>
     <script>
       (function () {
-        var stored = localStorage.getItem('chrono-kanban-dark-mode')
         var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
-        var dark = stored ? stored === 'dark' : prefersDark
+        var dark = prefersDark
+        try {
+          var stored = JSON.parse(localStorage.getItem('chrono-kanban-preferences'))
+          if (stored && typeof stored.darkMode === 'boolean') dark = stored.darkMode
+        } catch (e) {}
         if (dark) document.documentElement.classList.add('dark')
       })()
     </script>

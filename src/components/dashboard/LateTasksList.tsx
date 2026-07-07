@@ -1,5 +1,6 @@
 import { useStore } from '../../store/useStore'
-import { isLate } from '../../utils/time'
+import { isLate, formatDate } from '../../utils/time'
+import { getSemanticColors } from '../../utils/colorPalette'
 import type { TaskCard } from '../../types'
 
 interface LateTasksListProps {
@@ -10,6 +11,9 @@ interface LateTasksListProps {
 export function LateTasksList({ tasks, onOpenTask }: LateTasksListProps) {
   const boards = useStore((s) => s.boards)
   const buckets = useStore((s) => s.buckets)
+  const dateFormat = useStore((s) => s.preferences.dateFormat)
+  const colorMode = useStore((s) => s.preferences.colorMode)
+  const lateColor = getSemanticColors(colorMode).late.late
   const lateTasks = tasks.filter((t) => isLate(t)).sort((a, b) => (a.dueDate ?? '').localeCompare(b.dueDate ?? ''))
 
   if (lateTasks.length === 0) {
@@ -36,7 +40,9 @@ export function LateTasksList({ tasks, onOpenTask }: LateTasksListProps) {
             <td className="py-2 text-gray-900 dark:text-gray-100">{t.name}</td>
             <td className="py-2 text-gray-600 dark:text-gray-300">{boards[t.boardId]?.name}</td>
             <td className="py-2 text-gray-600 dark:text-gray-300">{buckets[t.bucketId]?.name}</td>
-            <td className="py-2 text-red-600 dark:text-red-400">{t.dueDate}</td>
+            <td className="py-2" style={{ color: lateColor }}>
+              {t.dueDate && formatDate(t.dueDate, dateFormat)}
+            </td>
           </tr>
         ))}
       </tbody>
