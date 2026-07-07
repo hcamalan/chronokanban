@@ -36,13 +36,16 @@ export function HowToView() {
         no server, and nothing ever sent anywhere.
       </p>
 
-      <p className="mb-6">
-        The first time you open ChronoKanban, you'll see a worked example board ("Software Engineering (Sample
-        board)") with
-        dozens of realistic tasks already tracked, so the dashboard and calendar aren't staring back at you empty.
-        It's a normal board - delete it like any other whenever you're ready to start your own. If you ever use
-        Settings → <strong>Delete all my data</strong> to wipe everything, it comes back automatically.
-      </p>
+      <section className="mb-8">
+        <h2 className="mb-3 text-lg font-semibold text-gray-900 dark:text-gray-100">The example board</h2>
+        <p>
+          The first time you open ChronoKanban, you'll see a worked example board ("Software Engineering (Sample
+          board)") with dozens of realistic tasks already tracked, so the dashboard and calendar aren't staring
+          back at you empty. It's a normal board - delete it like any other whenever you're ready to start your
+          own. If you ever use Settings → <strong>Delete all my data</strong> to wipe everything, it comes back
+          automatically.
+        </p>
+      </section>
 
       <p className="mb-6">
         ChronoKanban is built for individual use, not for coordinating a team. Because all data lives only in your
