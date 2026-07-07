@@ -5,9 +5,8 @@ import { logActivity, downloadTimesheetCsv, purgeCurrentRunLog, type WorkInterva
 import { createDebouncer } from './persist'
 import { loadPreferences, savePreferences } from './preferencesStorage'
 import { markExported } from './backupStorage'
-import { loadFocusSession, saveFocusSession, FOCUS_DURATION_MS } from './focusSession'
 import { addToDateString } from '../utils/time'
-import type { Board, Bucket, TaskCard, Category, Preferences, FocusSession } from '../types'
+import type { Board, Bucket, TaskCard, Category, Preferences } from '../types'
 
 interface PendingDeletion {
   label: string
@@ -61,11 +60,6 @@ interface AppState {
   pauseTimer: (taskId: string) => void
   pauseAllTimers: (boardId?: string) => void
   resetTimer: (taskId: string) => void
-
-  focusSession: FocusSession | null
-  startFocusSession: (taskId: string) => void
-  /** Widget-driven phase transitions; persists and clears via null. */
-  setFocusSession: (session: FocusSession | null) => void
   setElapsedTime: (taskId: string, newElapsedSeconds: number) => void
 
   completeTask: (taskId: string) => void
@@ -546,15 +540,6 @@ export const useStore = create<AppState>((set, get) => {
     Object.values(get().tasks)
       .filter((t) => t.timer.isRunning && (boardId == null || t.boardId === boardId))
       .forEach((t) => get().pauseTimer(t.id))
-  },
-  focusSession: loadFocusSession(),
-  startFocusSession: (taskId) => {
-    get().startTimer(taskId)
-    get().setFocusSession({ taskId, phase: 'focus', endsAt: Date.now() + FOCUS_DURATION_MS })
-  },
-  setFocusSession: (session) => {
-    set({ focusSession: session })
-    saveFocusSession(session)
   },
   resetTimer: (taskId) => {
     const task = get().tasks[taskId]

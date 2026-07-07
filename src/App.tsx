@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useStore } from './store/useStore'
 import { useNotificationWatcher } from './hooks/useNotificationWatcher'
+import { ensureInitialGracePeriod } from './store/backupStorage'
 import { TopNav } from './components/layout/TopNav'
 import { HowToView } from './components/layout/HowToView'
 import { Footer } from './components/layout/Footer'
 import { UndoToast } from './components/layout/UndoToast'
-import { FocusWidget } from './components/layout/FocusWidget'
 import { BoardListView } from './components/boards/BoardListView'
 import { BoardDetailView } from './components/board/BoardDetailView'
 import { DashboardView } from './components/dashboard/DashboardView'
@@ -31,6 +31,7 @@ function App() {
 
   useEffect(() => {
     loadFromDB()
+    ensureInitialGracePeriod()
   }, [loadFromDB])
 
   useEffect(() => {
@@ -178,7 +179,6 @@ function App() {
         <TaskDetailModal taskId={selectedTaskId} onClose={() => setSelectedTaskId(null)} />
       )}
       <UndoToast />
-      <FocusWidget />
     </div>
   )
 }

@@ -81,13 +81,6 @@ export interface TaskCard {
   completedAt: number | null
 }
 
-export interface FocusSession {
-  taskId: string
-  phase: 'focus' | 'break'
-  /** epoch ms when the current phase ends */
-  endsAt: number
-}
-
 export interface Attachment {
   id: string
   taskId: string

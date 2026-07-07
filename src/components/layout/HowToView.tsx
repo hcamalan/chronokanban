@@ -100,13 +100,6 @@ export function HowToView() {
         <SubChapter title="Resetting">
           <p>To reset a task's time back to zero, open its extended view — it's the only place with a Reset control.</p>
         </SubChapter>
-        <SubChapter title="Focus sessions">
-          <p>
-            Click <strong>Focus 25 min</strong> in a task's extended view to start a Pomodoro-style session: the
-            timer starts and a floating countdown appears. When the 25 minutes are up, the timer pauses
-            automatically and a 5-minute break begins. Stopping the session early leaves the timer running.
-          </p>
-        </SubChapter>
         <SubChapter title="Estimates">
           <p>
             Give a task an <strong>Estimated hours</strong> value and ChronoKanban shows how tracked time compares
@@ -168,7 +161,8 @@ export function HowToView() {
         <p>
           The <strong>Today</strong> tab (or the <strong>T</strong> key) is your daily agenda across all boards:
           what's running right now, what's due today, what's overdue, what you've already completed today — and a
-          live total of the time you've tracked so far.
+          live total of the time you've tracked so far. If any timers are running, a banner at the top lets you
+          pause all of them (or just the ones that have been running unusually long) in one click.
         </p>
       </Chapter>
 
@@ -230,8 +224,9 @@ export function HowToView() {
           it to another browser or device. Importing replaces everything currently in the app, so use it carefully.
         </p>
         <p>
-          If it's been more than two weeks since your last export, the Boards page shows a gentle reminder — take
-          it seriously: a browser cleanup can wipe local data without asking.
+          If it's been more than a week since your last export, the Boards page shows a gentle reminder (after a
+          few days' grace period on a brand-new install) — take it seriously: a browser cleanup can wipe local
+          data without asking.
         </p>
       </Chapter>
 
