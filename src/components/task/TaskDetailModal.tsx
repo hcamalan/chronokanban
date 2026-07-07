@@ -34,6 +34,8 @@ export function TaskDetailModal({ taskId, onClose }: TaskDetailModalProps) {
   const setElapsedTime = useStore((s) => s.setElapsedTime)
   const completeTask = useStore((s) => s.completeTask)
   const uncompleteTask = useStore((s) => s.uncompleteTask)
+  const focusSession = useStore((s) => s.focusSession)
+  const startFocusSession = useStore((s) => s.startFocusSession)
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [elapsedText, setElapsedText] = useState(() => formatHHMM(task?.timer.elapsedSeconds ?? 0))
   const [elapsedFocused, setElapsedFocused] = useState(false)
@@ -181,6 +183,17 @@ export function TaskDetailModal({ taskId, onClose }: TaskDetailModalProps) {
               Reset
             </button>
           )}
+          {!isCompleted &&
+            (focusSession?.taskId === taskId ? (
+              <span className="text-xs text-blue-600 dark:text-blue-400">Focus session running</span>
+            ) : (
+              <button
+                onClick={() => startFocusSession(taskId)}
+                className="rounded border border-blue-300 px-2 py-0.5 text-xs text-blue-700 hover:bg-blue-50 dark:border-blue-700 dark:text-blue-300 dark:hover:bg-blue-950"
+              >
+                Focus 25 min
+              </button>
+            ))}
         </div>
 
         <div className="grid grid-cols-2 gap-4">
