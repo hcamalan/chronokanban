@@ -58,11 +58,19 @@ export function formatHHMM(totalSeconds: number): string {
   return `${h}:${String(m).padStart(2, '0')}`
 }
 
-/** Strict H:MM parse to seconds, or null if invalid. No minus sign accepted, so this never returns negative. */
+/**
+ * Parses H:MM (or a bare hour count, e.g. "1" -> 1:00) to seconds, or null if invalid.
+ * No minus sign accepted, so this never returns negative.
+ */
 export function parseHHMM(text: string): number | null {
-  const match = text.trim().match(/^(\d+):([0-5]?\d)$/)
-  if (!match) return null
-  const h = Number(match[1])
-  const m = Number(match[2])
-  return (h * 60 + m) * 60
+  const trimmed = text.trim()
+  const withMinutes = trimmed.match(/^(\d+):([0-5]?\d)$/)
+  if (withMinutes) {
+    const h = Number(withMinutes[1])
+    const m = Number(withMinutes[2])
+    return (h * 60 + m) * 60
+  }
+  const hoursOnly = trimmed.match(/^(\d+)$/)
+  if (hoursOnly) return Number(hoursOnly[1]) * 3600
+  return null
 }
