@@ -68,6 +68,7 @@ function App() {
       }
 
       if (e.shiftKey && e.key.toLowerCase() === 't') {
+        e.preventDefault()
         if (view.kind === 'board') {
           const buckets = Object.values(useStore.getState().buckets)
             .filter((b) => b.boardId === view.boardId)
@@ -88,6 +89,7 @@ function App() {
       }
 
       if (e.shiftKey && e.key.toLowerCase() === 'b') {
+        e.preventDefault()
         if (view.kind !== 'boards') {
           setView({ kind: 'boards' })
           setTimeout(() => document.getElementById('new-board-name-input')?.focus(), 50)
