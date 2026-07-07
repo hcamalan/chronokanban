@@ -77,10 +77,14 @@ export function TopNav({ activeTab, onNavigate }: TopNavProps) {
   return (
     <header className="flex items-center justify-between border-b border-gray-200 bg-white px-6 py-3 dark:border-gray-700 dark:bg-gray-900">
       <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2">
+        <button
+          onClick={() => onNavigate('boards')}
+          className="flex items-center gap-2 rounded hover:opacity-80"
+          aria-label="Go to boards"
+        >
           <img src="./logo.svg" alt="" className="h-7 w-7" />
           <span className="text-lg font-semibold text-gray-900 dark:text-gray-100">ChronoKanban</span>
-        </div>
+        </button>
         <nav className="flex items-center gap-1">
           <button onClick={() => onNavigate('boards')} className={tabClass('boards')}>
             Boards
