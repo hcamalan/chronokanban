@@ -150,7 +150,7 @@ function App() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-gray-50 dark:bg-gray-950">
+    <div className="flex min-h-screen flex-col overflow-x-hidden bg-gray-50 dark:bg-gray-950">
       <TopNav
         activeTab={view.kind === 'board' ? 'boards' : view.kind}
         onNavigate={(tab) => setView({ kind: tab })}

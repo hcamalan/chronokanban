@@ -163,6 +163,10 @@ export function CalendarView({ tasks, onOpenTask }: CalendarViewProps) {
   }
 
   const gridColsClass = viewMode === 'day' ? 'grid-cols-1' : viewMode === '3day' ? 'grid-cols-3' : 'grid-cols-7'
+  // On narrow screens, keep multi-column layouts legible by giving the grid a floor width and letting
+  // the calendar scroll sideways instead of squishing each day cell. Desktop is unaffected.
+  const gridMinWidthClass =
+    viewMode === 'week' || viewMode === 'month' ? 'min-w-[640px]' : viewMode === '3day' ? 'min-w-[320px]' : ''
 
   return (
     <div ref={cardRef} className="relative rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
@@ -218,20 +222,22 @@ export function CalendarView({ tasks, onOpenTask }: CalendarViewProps) {
         <span className="text-sm font-medium text-gray-700 dark:text-gray-200">{rangeLabel}</span>
       </div>
 
-      <div className={`grid gap-2 ${gridColsClass}`}>
-        {visibleDates.map(({ dateKey, inCurrentPeriod }) => (
-          <CalendarDayCell
-            key={dateKey}
-            dateKey={dateKey}
-            inCurrentPeriod={inCurrentPeriod}
-            isMonthView={isMonthView}
-            workedOn={workedOnBarsFor(dateKey)}
-            due={dueBarsFor(dateKey)}
-            lateColor={lateColor}
-            onOpenTask={onOpenTask}
-            onShowMore={handleShowMore}
-          />
-        ))}
+      <div className="overflow-x-auto">
+        <div className={`grid gap-2 ${gridColsClass} ${gridMinWidthClass}`}>
+          {visibleDates.map(({ dateKey, inCurrentPeriod }) => (
+            <CalendarDayCell
+              key={dateKey}
+              dateKey={dateKey}
+              inCurrentPeriod={inCurrentPeriod}
+              isMonthView={isMonthView}
+              workedOn={workedOnBarsFor(dateKey)}
+              due={dueBarsFor(dateKey)}
+              lateColor={lateColor}
+              onOpenTask={onOpenTask}
+              onShowMore={handleShowMore}
+            />
+          ))}
+        </div>
       </div>
 
       <DownloadImageButton targetRef={cardRef} filename="chronokanban-calendar.png" />

@@ -21,8 +21,8 @@ export function DashboardView({ onOpenTask }: DashboardViewProps) {
   const boardCategories = categories.filter((c) => c.boardId === scope)
 
   return (
-    <div className="mx-auto max-w-5xl p-6">
-      <div className="mb-6 flex items-center justify-between">
+    <div className="mx-auto max-w-5xl p-4 sm:p-6">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Dashboard</h1>
         <div className="flex items-center gap-2">
           <button

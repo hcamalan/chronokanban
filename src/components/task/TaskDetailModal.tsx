@@ -183,7 +183,7 @@ export function TaskDetailModal({ taskId, onClose }: TaskDetailModalProps) {
           )}
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <label className="flex flex-col gap-1 text-sm text-gray-600 dark:text-gray-300">
             Board
             <select

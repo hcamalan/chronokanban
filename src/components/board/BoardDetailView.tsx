@@ -164,9 +164,9 @@ export function BoardDetailView({ boardId, onBack, onOpenTask }: BoardDetailView
   if (!board) return null
 
   return (
-    <div className="flex h-full flex-col p-6">
-      <div className="mb-6 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
+    <div className="flex h-full flex-col p-4 sm:p-6">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
           <button
             onClick={onBack}
             aria-label="Back to boards"
@@ -185,11 +185,11 @@ export function BoardDetailView({ boardId, onBack, onOpenTask }: BoardDetailView
                 else setName(board.name)
               }}
               onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
-              className="rounded border border-gray-300 px-2 text-xl font-semibold outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+              className="min-w-0 max-w-full rounded border border-gray-300 px-2 text-xl font-semibold outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
             />
           ) : (
             <h1
-              className="text-xl font-semibold text-gray-900 dark:text-gray-100"
+              className="truncate text-xl font-semibold text-gray-900 dark:text-gray-100"
               onDoubleClick={() => setEditingName(true)}
             >
               {board.name}

@@ -27,7 +27,7 @@ function SubChapter({ title, children }: ChapterProps) {
 
 export function HowToView() {
   return (
-    <div className="mx-auto max-w-3xl p-6 text-sm text-gray-700 dark:text-gray-300">
+    <div className="mx-auto max-w-3xl p-4 text-sm text-gray-700 dark:text-gray-300 sm:p-6">
       <h1 className="mb-6 text-2xl font-semibold text-gray-900 dark:text-gray-100">How to use ChronoKanban</h1>
 
       <p className="mb-6">
