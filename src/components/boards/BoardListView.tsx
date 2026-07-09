@@ -13,6 +13,7 @@ import { useStore } from '../../store/useStore'
 import { SortableBoardCard } from './SortableBoardCard'
 import { ConfirmDialog } from './ConfirmDialog'
 import { BackupNudge } from './BackupNudge'
+import { InstallPrompt } from '../layout/InstallPrompt'
 
 interface BoardListViewProps {
   onOpenBoard: (boardId: string) => void
@@ -45,6 +46,7 @@ export function BoardListView({ onOpenBoard }: BoardListViewProps) {
 
   return (
     <div className="mx-auto max-w-5xl p-4 sm:p-6">
+      <InstallPrompt />
       <BackupNudge />
       <h1 className="mb-6 text-2xl font-semibold text-gray-900 dark:text-gray-100">Boards</h1>
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
