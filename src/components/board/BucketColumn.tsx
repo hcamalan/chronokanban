@@ -123,14 +123,16 @@ export function BucketColumn({
             </span>
           )}
         </div>
-        <div className="flex flex-shrink-0 items-center gap-1">
+        <div className="flex flex-shrink-0 items-center gap-3">
           <button
             onClick={onToggleCollapsed}
             aria-label={collapsed ? `Expand bucket ${bucket.name}` : `Minimize bucket ${bucket.name}`}
             title={collapsed ? 'Expand' : 'Minimize'}
-            className="text-xs text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+            className="text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
           >
-            {collapsed ? '▸' : '▾'}
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              {collapsed ? <path d="m9 18 6-6-6-6" /> : <path d="m6 9 6 6 6-6" />}
+            </svg>
           </button>
           <button
             onClick={handleDeleteClick}
