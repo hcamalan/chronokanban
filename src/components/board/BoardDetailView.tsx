@@ -5,6 +5,7 @@ import {
   DragOverlay,
   MouseSensor,
   TouchSensor,
+  MeasuringStrategy,
   closestCorners,
   useSensor,
   useSensors,
@@ -179,6 +180,10 @@ export function BoardDetailView({ boardId, onBack, onOpenTask }: BoardDetailView
 
   if (!board) return null
 
+  // On touch, collapse every bucket the moment a task drag begins so the whole board fits and the
+  // card can be dropped into any bucket without a long scroll. Desktop keeps its spacious layout.
+  const dragCollapse = !isDesktop && activeTaskId != null
+
   return (
     <div className="flex h-full flex-col p-4 sm:p-6">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
@@ -291,6 +296,7 @@ export function BoardDetailView({ boardId, onBack, onOpenTask }: BoardDetailView
       <DndContext
         sensors={sensors}
         collisionDetection={closestCorners}
+        measuring={{ droppable: { strategy: MeasuringStrategy.Always } }}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
@@ -308,7 +314,7 @@ export function BoardDetailView({ boardId, onBack, onOpenTask }: BoardDetailView
                 selectMode={selectMode}
                 selectedTaskIds={selectedTaskIds}
                 onToggleSelect={toggleTaskSelected}
-                collapsed={collapsedBucketIds.has(bucket.id)}
+                collapsed={dragCollapse || collapsedBucketIds.has(bucket.id)}
                 onToggleCollapsed={() => toggleBucketCollapsed(bucket.id)}
               />
             ))}
