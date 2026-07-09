@@ -95,7 +95,7 @@ export function BucketColumn({
       }`}
     >
       <div className="mb-2 flex items-center justify-between gap-2">
-        <div className="flex min-w-0 items-center gap-1.5">
+        <div className="flex min-w-0 flex-1 items-center gap-1.5">
           {editingName ? (
             <input
               autoFocus
@@ -109,6 +109,19 @@ export function BucketColumn({
               onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
               className="w-full rounded border border-gray-300 px-1 text-sm font-medium outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
             />
+          ) : collapsed ? (
+            <button
+              onClick={onToggleCollapsed}
+              aria-label={`Expand bucket ${bucket.name}`}
+              className="flex min-w-0 flex-1 items-center gap-1.5 py-0.5 text-left"
+            >
+              <span className="truncate text-sm font-medium text-gray-700 dark:text-gray-200">{bucket.name}</span>
+              {taskCount > 0 && (
+                <span className="flex-shrink-0 rounded-full bg-gray-200 px-1.5 text-xs text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+                  {taskCount}
+                </span>
+              )}
+            </button>
           ) : (
             <h2
               className="truncate text-sm font-medium text-gray-700 dark:text-gray-200"
@@ -116,11 +129,6 @@ export function BucketColumn({
             >
               {bucket.name}
             </h2>
-          )}
-          {collapsed && taskCount > 0 && (
-            <span className="flex-shrink-0 rounded-full bg-gray-200 px-1.5 text-xs text-gray-600 dark:bg-gray-700 dark:text-gray-300">
-              {taskCount}
-            </span>
           )}
         </div>
         <div className="flex flex-shrink-0 items-center gap-3">
