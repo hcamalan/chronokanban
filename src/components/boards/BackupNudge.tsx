@@ -15,15 +15,18 @@ export function BackupNudge() {
   const snoozeUntil = getSnoozeUntil()
   if (snoozeUntil != null && snoozeUntil > Date.now()) return null
 
+  // Never-exported users are handled by the one-time BackupReminder; this recurring nudge only
+  // fires once someone has exported at least once and then let it go stale.
   const lastExportAt = getLastExportAt()
-  const daysSince = lastExportAt != null ? (Date.now() - lastExportAt) / (24 * 60 * 60 * 1000) : null
-  if (daysSince != null && daysSince <= NUDGE_AFTER_DAYS) return null
+  if (lastExportAt == null) return null
+  const daysSince = (Date.now() - lastExportAt) / (24 * 60 * 60 * 1000)
+  if (daysSince <= NUDGE_AFTER_DAYS) return null
 
   return (
     <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-100">
       <span>
         Your data lives only in this browser — last backup:{' '}
-        <strong>{daysSince != null ? `${Math.floor(daysSince)} days ago` : 'never'}</strong>.
+        <strong>{Math.floor(daysSince)} days ago</strong>.
       </span>
       <span className="flex items-center gap-3">
         <button

@@ -1,7 +1,17 @@
 const LAST_EXPORT_KEY = 'chrono-kanban-last-export'
 const SNOOZE_KEY = 'chrono-kanban-backup-snooze'
+const REMINDER_DISMISSED_KEY = 'chrono-kanban-backup-reminder-dismissed'
 
 export const SNOOZE_DAYS = 3
+
+/** One-time onboarding reminder to back up, shown until the user exports once or dismisses it. */
+export function isBackupReminderDismissed(): boolean {
+  return localStorage.getItem(REMINDER_DISMISSED_KEY) === 'true'
+}
+
+export function dismissBackupReminder(): void {
+  localStorage.setItem(REMINDER_DISMISSED_KEY, 'true')
+}
 
 export function getLastExportAt(): number | null {
   const raw = localStorage.getItem(LAST_EXPORT_KEY)
