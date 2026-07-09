@@ -3,7 +3,8 @@ import { useShallow } from 'zustand/react/shallow'
 import {
   DndContext,
   DragOverlay,
-  PointerSensor,
+  MouseSensor,
+  TouchSensor,
   closestCorners,
   useSensor,
   useSensors,
@@ -56,8 +57,23 @@ export function BoardDetailView({ boardId, onBack, onOpenTask }: BoardDetailView
   const [searchQuery, setSearchQuery] = useState('')
   const [selectMode, setSelectMode] = useState(false)
   const [selectedTaskIds, setSelectedTaskIds] = useState<Set<string>>(new Set())
+  const [collapsedBucketIds, setCollapsedBucketIds] = useState<Set<string>>(new Set())
 
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }))
+  // Mouse drags on an 8px threshold (unchanged desktop feel); touch requires a ~250ms press-and-hold
+  // so a quick tap opens a task and normal scrolling isn't hijacked into a drag.
+  const sensors = useSensors(
+    useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 8 } }),
+  )
+
+  function toggleBucketCollapsed(bucketId: string) {
+    setCollapsedBucketIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(bucketId)) next.delete(bucketId)
+      else next.add(bucketId)
+      return next
+    })
+  }
 
   function toggleTaskSelected(taskId: string) {
     setSelectedTaskIds((prev) => {
@@ -292,6 +308,8 @@ export function BoardDetailView({ boardId, onBack, onOpenTask }: BoardDetailView
                 selectMode={selectMode}
                 selectedTaskIds={selectedTaskIds}
                 onToggleSelect={toggleTaskSelected}
+                collapsed={collapsedBucketIds.has(bucket.id)}
+                onToggleCollapsed={() => toggleBucketCollapsed(bucket.id)}
               />
             ))}
             <form

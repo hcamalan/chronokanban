@@ -81,12 +81,12 @@ export function TaskDetailModal({ taskId, onClose }: TaskDetailModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4"
+      className="fixed inset-0 z-40 flex bg-black/40 sm:items-center sm:justify-center sm:p-4"
       onClick={handleClose}
     >
       <div
-        className={`overflow-y-auto rounded-lg bg-white p-6 shadow-xl dark:bg-gray-900 ${
-          maximized ? 'h-[95vh] w-[95vw] max-w-none' : 'max-h-[90vh] w-full max-w-2xl'
+        className={`h-[100dvh] w-full max-w-none overflow-y-auto rounded-none bg-white p-4 shadow-xl dark:bg-gray-900 sm:w-full sm:rounded-lg sm:p-6 ${
+          maximized ? 'sm:h-[95dvh] sm:w-[95vw] sm:max-w-none' : 'sm:h-auto sm:max-h-[90dvh] sm:max-w-2xl'
         }`}
         onClick={(e) => e.stopPropagation()}
       >
@@ -120,7 +120,7 @@ export function TaskDetailModal({ taskId, onClose }: TaskDetailModalProps) {
             <button
               onClick={() => setMaximized((v) => !v)}
               aria-label={maximized ? 'Restore' : 'Maximize'}
-              className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800"
+              className="hidden rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 sm:inline dark:hover:bg-gray-800"
             >
               {maximized ? '❐' : '□'}
             </button>
