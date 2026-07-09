@@ -50,8 +50,6 @@ interface TaskSpec {
   sessions?: number
   /** For completed tasks: how many days ago the last session (and completion) happened. */
   completedDaysAgo?: number
-  /** Exactly one task should have this — currently running, started ~25 minutes ago. */
-  isRunning?: boolean
 }
 
 const TASK_SPECS: TaskSpec[] = [
@@ -70,15 +68,6 @@ const TASK_SPECS: TaskSpec[] = [
     description:
       "Design how tenant data stays isolated as we move upmarket to larger customers.\n\n- Row-level security vs schema-per-tenant\n- Migration path for existing single-tenant data\n\n**Decision needed by:** next planning cycle",
   },
-  { name: 'Investigate GraphQL for internal APIs', bucket: 'backlog', category: 'techDebt', status: 'not-started' },
-  { name: 'Evaluate feature flag providers', bucket: 'backlog', category: 'devops', status: 'not-started' },
-  {
-    name: 'Explore WASM for image processing pipeline',
-    bucket: 'backlog',
-    category: 'techDebt',
-    status: 'not-started',
-    subtasks: ['Prototype resize in WASM', 'Benchmark vs current JS pipeline'],
-  },
   {
     name: 'Draft RFC: event-driven order pipeline',
     bucket: 'backlog',
@@ -87,21 +76,6 @@ const TASK_SPECS: TaskSpec[] = [
     description:
       'RFC proposing we move order processing to an event-driven pipeline instead of the current synchronous chain.\n\n**Goals:**\n- Decouple inventory, billing, and shipping\n- Reduce order API p95 latency\n\n[Draft RFC](https://github.com/example-org/example-repo/wiki/rfc-event-driven-orders)',
   },
-  { name: 'Research Postgres partitioning for events table', bucket: 'backlog', category: 'techDebt', status: 'not-started' },
-  { name: 'Audit third-party npm dependencies for licenses', bucket: 'backlog', category: 'devops', status: 'not-started' },
-  {
-    name: 'Prototype offline-first sync for mobile app',
-    bucket: 'backlog',
-    category: 'feature',
-    status: 'not-started',
-    subtasks: ['Design conflict resolution strategy', 'Implement local write queue', 'Add background sync retry logic'],
-    description:
-      "Spike: can we support offline editing on the mobile app with eventual sync?\n\n**Open questions:**\n- Conflict resolution (last-write-wins vs CRDT)\n- How long to retain the local write queue\n\nNotes: [spike doc](https://github.com/example-org/example-repo/wiki/offline-sync-spike)",
-  },
-  { name: 'Investigate flaky E2E suite root cause', bucket: 'backlog', category: 'bug', status: 'not-started', urgency: 'medium' },
-  { name: 'Explore CDN edge caching for API responses', bucket: 'backlog', category: 'devops', status: 'not-started' },
-  { name: 'Write onboarding guide for new hires', bucket: 'backlog', category: 'docs', status: 'not-started' },
-  { name: 'Set up feature flag for new checkout flow', bucket: 'backlog', category: 'devops', status: 'not-started' },
 
   // --- To Do ---
   {
@@ -135,45 +109,6 @@ const TASK_SPECS: TaskSpec[] = [
     subtasks: ['Add retry-free wait condition', 'Remove hard-coded sleep'],
   },
   {
-    name: 'Add rate limiting to public API',
-    bucket: 'todo',
-    category: 'feature',
-    status: 'not-started',
-    storyPoints: 5,
-    estimatedHours: 6,
-    dueOffsetDays: 5,
-  },
-  {
-    name: 'Write unit tests for payment module',
-    bucket: 'todo',
-    category: 'techDebt',
-    status: 'not-started',
-    urgency: 'medium',
-    storyPoints: 3,
-    estimatedHours: 4,
-  },
-  {
-    name: 'Update API documentation for webhooks endpoint',
-    bucket: 'todo',
-    category: 'docs',
-    status: 'not-started',
-    storyPoints: 2,
-    estimatedHours: 3,
-    description:
-      "Document the webhook retry/backoff behavior for third-party integrators.\n\n- Payload schema\n- Signature verification steps\n- Retry schedule (exponential backoff, max 5 attempts)\n\nDraft: [webhooks.md](https://github.com/example-org/example-repo/blob/main/docs/webhooks.md)",
-  },
-  {
-    name: 'Triage bug reports from support queue',
-    bucket: 'todo',
-    category: 'bug',
-    status: 'not-started',
-    urgency: 'high',
-    dueOffsetDays: 0,
-    description:
-      "Go through the support queue and triage:\n\n- Reproduce and label by severity\n- File tracking issues for anything not already tracked\n- Close duplicates\n\nQueue: [support inbox](https://github.com/example-org/example-repo/issues?q=is%3Aissue+label%3Asupport)",
-  },
-  { name: 'Upgrade Node.js runtime to v22', bucket: 'todo', category: 'devops', status: 'not-started', storyPoints: 3, estimatedHours: 5, dueOffsetDays: 10 },
-  {
     name: 'Sprint planning',
     bucket: 'todo',
     category: 'meeting',
@@ -182,38 +117,8 @@ const TASK_SPECS: TaskSpec[] = [
     dueOffsetDays: 3,
     recurrence: { interval: 2, unit: 'week' },
   },
-  {
-    name: '1:1 with manager',
-    bucket: 'todo',
-    category: 'meeting',
-    status: 'not-started',
-    estimatedHours: 0.5,
-    dueOffsetDays: 2,
-    recurrence: { interval: 1, unit: 'week' },
-    assignedTo: 'Alex Rivera',
-  },
-  {
-    name: 'On-call rotation handoff',
-    bucket: 'todo',
-    category: 'devops',
-    status: 'not-started',
-    estimatedHours: 0.5,
-    dueOffsetDays: 6,
-    recurrence: { interval: 1, unit: 'week' },
-    assignedTo: 'Jordan Lee',
-  },
 
   // --- In Progress ---
-  {
-    name: 'Implement search-as-you-type for task board',
-    bucket: 'inProgress',
-    category: 'feature',
-    status: 'in-progress',
-    storyPoints: 5,
-    estimatedHours: 8,
-    sessions: 3,
-    subtasks: ['Debounce search input', 'Add fuzzy matching', 'Highlight matched text', 'Add keyboard navigation for results'],
-  },
   {
     name: 'Investigate memory leak in worker service',
     bucket: 'inProgress',
@@ -225,7 +130,6 @@ const TASK_SPECS: TaskSpec[] = [
     estimatedHours: 6,
     dueOffsetDays: -1,
     sessions: 4,
-    isRunning: true,
     subtasks: ['Reproduce leak locally with heap snapshots', 'Bisect recent worker changes', 'Patch and verify with load test'],
     description:
       "Worker process RSS grows ~40MB/hour under sustained load until OOM-killed after ~18 hours.\n\n**Suspects:**\n- Unbounded event listener registration in the job queue consumer\n- Retained closures in the retry-backoff timer\n\nHeap snapshots attached in [incident channel](https://github.com/example-org/example-repo/issues/501).",
@@ -250,37 +154,6 @@ const TASK_SPECS: TaskSpec[] = [
     sessions: 3,
     description:
       "The current auth middleware predates our move to JWT and still has a session-cookie fallback path nobody uses.\n\n**Plan:**\n- Confirm cookie fallback has zero traffic (check access logs)\n- Remove dead code path\n- Simplify middleware chain",
-  },
-  { name: 'Build calendar heatmap widget', bucket: 'inProgress', category: 'feature', status: 'in-progress', storyPoints: 3, estimatedHours: 5, sessions: 2 },
-  {
-    name: 'Optimize DB query for dashboard aggregate',
-    bucket: 'inProgress',
-    category: 'bug',
-    status: 'in-progress',
-    urgency: 'medium',
-    storyPoints: 3,
-    estimatedHours: 4,
-    dueOffsetDays: 1,
-    sessions: 2,
-  },
-  {
-    name: 'Write integration tests for billing webhook',
-    bucket: 'inProgress',
-    category: 'techDebt',
-    status: 'in-progress',
-    storyPoints: 3,
-    estimatedHours: 5,
-    sessions: 2,
-    description:
-      "Billing webhook has no integration test coverage — we've shipped two regressions here this quarter.\n\n- Cover successful charge, failed charge, and refund events\n- Use recorded fixtures from the provider's test mode",
-  },
-  {
-    name: 'Pair with teammate on caching layer design',
-    bucket: 'inProgress',
-    category: 'feature',
-    status: 'in-progress',
-    assignedTo: 'Priya Shah',
-    sessions: 1,
   },
 
   // --- Code Review ---
@@ -307,23 +180,9 @@ const TASK_SPECS: TaskSpec[] = [
     storyPoints: 3,
     sessions: 2,
   },
-  { name: 'PR #491: add subtask reordering', bucket: 'codeReview', category: 'feature', status: 'in-progress', assignedTo: 'Jordan Lee', storyPoints: 2, sessions: 1 },
-  {
-    name: 'PR #494: docs for webhook retries',
-    bucket: 'codeReview',
-    category: 'docs',
-    status: 'in-progress',
-    storyPoints: 1,
-    sessions: 1,
-    description: 'Docs-only PR describing the retry/backoff schedule from the webhooks documentation task.\n\n[View PR #494](https://github.com/example-org/example-repo/pull/494)',
-  },
-  { name: 'PR #498: refactor CategoryPicker component', bucket: 'codeReview', category: 'techDebt', status: 'in-progress', assignedTo: 'Jordan Lee', storyPoints: 2, sessions: 1 },
 
   // --- Done ---
   { name: 'Set up CI pipeline for staging deploys', bucket: 'done', category: 'devops', status: 'completed', storyPoints: 5, estimatedHours: 6, sessions: 3, completedDaysAgo: 28, subtasks: ['Define pipeline stages', 'Add automated smoke tests', 'Configure staging secrets'] },
-  { name: 'Fix crash on empty task description', bucket: 'done', category: 'bug', status: 'completed', storyPoints: 1, estimatedHours: 1, sessions: 1, completedDaysAgo: 25 },
-  { name: 'Add dark mode toggle', bucket: 'done', category: 'feature', status: 'completed', storyPoints: 3, estimatedHours: 4, sessions: 2, completedDaysAgo: 24 },
-  { name: 'Write onboarding docs for API keys', bucket: 'done', category: 'docs', status: 'completed', storyPoints: 2, estimatedHours: 2, sessions: 1, completedDaysAgo: 21 },
   {
     name: 'Migrate database to new hosting provider',
     bucket: 'done',
@@ -337,7 +196,6 @@ const TASK_SPECS: TaskSpec[] = [
     description:
       'Move the primary Postgres instance to the new hosting provider with zero-downtime replication.\n\n- [x] Provision instance\n- [x] Set up logical replication\n- [x] Cut over during the Sunday maintenance window\n\nRunbook: [migration-runbook.md](https://github.com/example-org/example-repo/wiki/migration-runbook)',
   },
-  { name: 'Fix timezone bug in due-date calculations', bucket: 'done', category: 'bug', status: 'completed', storyPoints: 2, estimatedHours: 3, sessions: 2, completedDaysAgo: 18 },
   {
     name: 'Add CSV export for timesheets',
     bucket: 'done',
@@ -350,25 +208,8 @@ const TASK_SPECS: TaskSpec[] = [
     description:
       "Let users export a day-by-task CSV of tracked time.\n\n**Why:** several users asked for a way to build monthly reports without screenshotting the dashboard.\n\n- Escapes commas/quotes correctly\n- One row per (day, task)\n- Opens cleanly in Excel and Google Sheets",
   },
-  { name: 'Refactor bucket drag-and-drop logic', bucket: 'done', category: 'techDebt', status: 'completed', storyPoints: 3, estimatedHours: 5, sessions: 2, completedDaysAgo: 14 },
   { name: 'Write design doc for notifications system', bucket: 'done', category: 'docs', status: 'completed', storyPoints: 2, estimatedHours: 3, sessions: 1, completedDaysAgo: 12 },
-  { name: 'Fix race condition in timer pause/resume', bucket: 'done', category: 'bug', status: 'completed', storyPoints: 3, estimatedHours: 4, sessions: 2, completedDaysAgo: 10 },
-  {
-    name: 'Add colorblind-safe category palette',
-    bucket: 'done',
-    category: 'feature',
-    status: 'completed',
-    storyPoints: 2,
-    estimatedHours: 3,
-    sessions: 1,
-    completedDaysAgo: 8,
-    description:
-      'Swap category colors for a colorblind-safe palette when the preference is enabled.\n\n- Okabe-Ito based palette\n- Remap stored hex to safe equivalents at render time (non-destructive)',
-  },
-  { name: 'Optimize bundle size with code splitting', bucket: 'done', category: 'techDebt', status: 'completed', storyPoints: 3, estimatedHours: 5, sessions: 2, completedDaysAgo: 6 },
-  { name: 'Review and merge dependency upgrade PRs', bucket: 'done', category: 'devops', status: 'completed', storyPoints: 1, estimatedHours: 1, sessions: 1, completedDaysAgo: 4 },
-  { name: 'Fix broken link in README', bucket: 'done', category: 'docs', status: 'completed', storyPoints: 1, estimatedHours: 0.5, sessions: 1, completedDaysAgo: 2 },
-  { name: 'Deploy hotfix for login redirect bug', bucket: 'done', category: 'bug', status: 'completed', urgency: 'high', storyPoints: 2, estimatedHours: 1, sessions: 1, completedDaysAgo: 0 },
+  { name: 'Deploy hotfix for login redirect bug', bucket: 'done', category: 'bug', status: 'completed', urgency: 'high', storyPoints: 2, estimatedHours: 1, sessions: 1, completedDaysAgo: 1 },
 ]
 
 function dateKeyOffset(days: number, now: number): string {
@@ -388,7 +229,7 @@ export function buildExampleBoardData(): {
 } {
   const now = Date.now()
   const boardId = crypto.randomUUID()
-  const board: Board = { id: boardId, name: 'Software Engineering (Sample board)', order: 0, createdAt: now - 60 * DAY }
+  const board: Board = { id: boardId, name: 'Example board (Developer)', order: 0, createdAt: now - 60 * DAY }
 
   const bucketDefs: { key: BucketKey; name: string }[] = [
     { key: 'backlog', name: 'Backlog' },
@@ -435,7 +276,8 @@ export function buildExampleBoardData(): {
 
     if (spec.sessions && spec.sessions > 0) {
       const willComplete = spec.status === 'completed'
-      const baseDaysAgo = willComplete ? (spec.completedDaysAgo ?? 0) : 0
+      // At least 1 day ago, so no seeded session ever lands on today and "Tracked today" starts at zero.
+      const baseDaysAgo = Math.max(1, willComplete ? (spec.completedDaysAgo ?? 1) : 1)
       const raw: { start: number; end: number }[] = []
       let daysAgo = baseDaysAgo
       for (let i = 0; i < spec.sessions; i++) {
@@ -483,9 +325,7 @@ export function buildExampleBoardData(): {
       done: spec.status === 'completed' || (spec.status === 'in-progress' && i === 0),
     }))
 
-    const timer: TimerState = spec.isRunning
-      ? { isRunning: true, elapsedSeconds, startedAt: now - 25 * MIN }
-      : { isRunning: false, elapsedSeconds, startedAt: null }
+    const timer: TimerState = { isRunning: false, elapsedSeconds, startedAt: null }
 
     const fallbackCreatedAt = now - (5 + index) * DAY
     const createdAt = oldestSessionStart != null ? Math.min(fallbackCreatedAt, oldestSessionStart - DAY) : fallbackCreatedAt

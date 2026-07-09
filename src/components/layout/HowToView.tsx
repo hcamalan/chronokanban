@@ -72,11 +72,10 @@ export function HowToView() {
 
       <Chapter title="The example board">
         <p>
-          The first time you open ChronoKanban, you'll see a worked example board ("Software Engineering (Sample
-          board)") with dozens of realistic tasks already tracked, so the dashboard and calendar aren't staring
-          back at you empty. It's a normal board - delete it like any other whenever you're ready to start your
-          own. If you ever use Settings → <strong>Delete all my data</strong> to wipe everything, it comes back
-          automatically.
+          The first time you open ChronoKanban, you'll see a worked example board ("Example board (Developer)")
+          with a set of realistic tasks already tracked, so the dashboard and calendar aren't staring back at you
+          empty. It's a normal board - delete it like any other whenever you're ready to start your own. If you
+          ever use Settings → <strong>Delete all my data</strong> to wipe everything, it comes back automatically.
         </p>
       </Chapter>
       
