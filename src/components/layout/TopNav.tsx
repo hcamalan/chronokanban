@@ -1,16 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { useStore } from '../../store/useStore'
-import { ImportConflictDialog } from '../boards/ImportConflictDialog'
 import { SettingsPanel } from './SettingsPanel'
 import { HotkeysPanel } from './HotkeysPanel'
 import { DonatePanel } from './DonatePanel'
-import {
-  parseImportFile,
-  findBoardConflicts,
-  mergeImportFile,
-  type BoardConflict,
-  type ConflictDecision,
-} from '../../db/exportImport'
 
 interface TopNavProps {
   activeTab: 'boards' | 'today' | 'dashboard' | 'howto'
@@ -19,18 +10,7 @@ interface TopNavProps {
   onHotkeysOpenChange: (open: boolean) => void
 }
 
-interface ImportFlow {
-  data: Awaited<ReturnType<typeof parseImportFile>>
-  conflicts: BoardConflict[]
-  currentIndex: number
-  decisions: Record<string, ConflictDecision>
-}
-
 export function TopNav({ activeTab, onNavigate, hotkeysOpen, onHotkeysOpenChange }: TopNavProps) {
-  const exportData = useStore((s) => s.exportData)
-  const loadFromDB = useStore((s) => s.loadFromDB)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const [importFlow, setImportFlow] = useState<ImportFlow | null>(null)
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -43,46 +23,7 @@ export function TopNav({ activeTab, onNavigate, hotkeysOpen, onHotkeysOpenChange
     return () => document.removeEventListener('mousedown', onDown)
   }, [menuOpen])
 
-  async function handleFileSelected(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    e.target.value = ''
-    if (!file) return
-
-    let data
-    try {
-      data = await parseImportFile(file)
-    } catch {
-      window.alert('This file could not be read as a ChronoKanban export.')
-      return
-    }
-
-    const existingBoards = Object.values(useStore.getState().boards)
-    const conflicts = findBoardConflicts(data, existingBoards)
-
-    if (conflicts.length === 0) {
-      await mergeImportFile(data, [], {})
-      await loadFromDB()
-      return
-    }
-    setImportFlow({ data, conflicts, currentIndex: 0, decisions: {} })
-  }
-
-  async function handleConflictDecision(decision: ConflictDecision) {
-    if (!importFlow) return
-    const conflict = importFlow.conflicts[importFlow.currentIndex]
-    const decisions = { ...importFlow.decisions, [conflict.incoming.id]: decision }
-    const nextIndex = importFlow.currentIndex + 1
-
-    if (nextIndex >= importFlow.conflicts.length) {
-      await mergeImportFile(importFlow.data, importFlow.conflicts, decisions)
-      await loadFromDB()
-      setImportFlow(null)
-    } else {
-      setImportFlow({ ...importFlow, decisions, currentIndex: nextIndex })
-    }
-  }
-
-  const tabClass = (tab: 'boards' | 'today' | 'dashboard' | 'howto') =>
+  const tabClass = (tab: 'boards' | 'today' | 'dashboard') =>
     `rounded px-3 py-1.5 text-sm font-medium ${
       activeTab === tab
         ? 'bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900'
@@ -110,9 +51,6 @@ export function TopNav({ activeTab, onNavigate, hotkeysOpen, onHotkeysOpenChange
           <button onClick={() => onNavigate('today')} className={tabClass('today')}>
             Today
           </button>
-          <button onClick={() => onNavigate('howto')} className={tabClass('howto')}>
-            How to
-          </button>
         </nav>
       </div>
       <div className="flex items-center gap-2">
@@ -126,16 +64,10 @@ export function TopNav({ activeTab, onNavigate, hotkeysOpen, onHotkeysOpenChange
             Send feedback
           </a>
           <button
-            onClick={() => exportData()}
+            onClick={() => onNavigate('howto')}
             className="rounded px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
           >
-            Export
-          </button>
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            className="rounded px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
-          >
-            Import
+            How to
           </button>
           <HotkeysPanel open={hotkeysOpen} onOpenChange={onHotkeysOpenChange} />
         </div>
@@ -155,7 +87,7 @@ export function TopNav({ activeTab, onNavigate, hotkeysOpen, onHotkeysOpenChange
           </button>
           {menuOpen && (
             <div className="absolute right-0 z-30 mt-1 flex w-56 flex-col rounded border border-gray-200 bg-white p-1 shadow-lg dark:border-gray-700 dark:bg-gray-800">
-              {(['boards', 'dashboard', 'today', 'howto'] as const).map((tab) => (
+              {(['boards', 'dashboard', 'today'] as const).map((tab) => (
                 <button
                   key={tab}
                   onClick={() => {
@@ -168,7 +100,7 @@ export function TopNav({ activeTab, onNavigate, hotkeysOpen, onHotkeysOpenChange
                       : 'text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700'
                   }`}
                 >
-                  {tab === 'boards' ? 'Boards' : tab === 'dashboard' ? 'Dashboard' : tab === 'today' ? 'Today' : 'How to'}
+                  {tab === 'boards' ? 'Boards' : tab === 'dashboard' ? 'Dashboard' : 'Today'}
                 </button>
               ))}
               <div className="my-1 border-t border-gray-200 dark:border-gray-700" />
@@ -190,41 +122,17 @@ export function TopNav({ activeTab, onNavigate, hotkeysOpen, onHotkeysOpenChange
               </a>
               <button
                 onClick={() => {
-                  exportData()
+                  onNavigate('howto')
                   setMenuOpen(false)
                 }}
                 className="rounded px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
               >
-                Export
-              </button>
-              <button
-                onClick={() => {
-                  fileInputRef.current?.click()
-                  setMenuOpen(false)
-                }}
-                className="rounded px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
-              >
-                Import
+                How to
               </button>
             </div>
           )}
         </div>
-
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="application/json"
-          onChange={handleFileSelected}
-          className="hidden"
-        />
       </div>
-
-      {importFlow && (
-        <ImportConflictDialog
-          boardName={importFlow.conflicts[importFlow.currentIndex].incoming.name}
-          onDecision={handleConflictDecision}
-        />
-      )}
     </header>
   )
 }

@@ -2,13 +2,28 @@ import { useEffect, useRef, useState } from 'react'
 import { useStore } from '../../store/useStore'
 import { DarkModeToggle } from './DarkModeToggle'
 import { ConfirmDialog } from '../boards/ConfirmDialog'
+import { ImportConflictDialog } from '../boards/ImportConflictDialog'
 import { FieldsPanel } from './FieldsPanel'
 import { BUCKET_WIDTH_OPTIONS } from '../../utils/bucketWidth'
 import { requestNotificationPermission } from '../../utils/notifications'
+import {
+  parseImportFile,
+  findBoardConflicts,
+  mergeImportFile,
+  type BoardConflict,
+  type ConflictDecision,
+} from '../../db/exportImport'
 import type { DateFormat, ColorMode } from '../../types'
 
 interface SettingsPanelProps {
   onDataDeleted: () => void
+}
+
+interface ImportFlow {
+  data: Awaited<ReturnType<typeof parseImportFile>>
+  conflicts: BoardConflict[]
+  currentIndex: number
+  decisions: Record<string, ConflictDecision>
 }
 
 const DATE_FORMAT_OPTIONS: { value: DateFormat; label: string }[] = [
@@ -31,10 +46,14 @@ export function SettingsPanel({ onDataDeleted }: SettingsPanelProps) {
   const [open, setOpen] = useState(false)
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [fieldsOpen, setFieldsOpen] = useState(false)
+  const [importFlow, setImportFlow] = useState<ImportFlow | null>(null)
   const ref = useRef<HTMLDivElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const preferences = useStore((s) => s.preferences)
   const setPreference = useStore((s) => s.setPreference)
   const deleteAllData = useStore((s) => s.deleteAllData)
+  const exportData = useStore((s) => s.exportData)
+  const loadFromDB = useStore((s) => s.loadFromDB)
 
   useEffect(() => {
     if (!open) return
@@ -44,6 +63,45 @@ export function SettingsPanel({ onDataDeleted }: SettingsPanelProps) {
     document.addEventListener('mousedown', onDown)
     return () => document.removeEventListener('mousedown', onDown)
   }, [open])
+
+  async function handleFileSelected(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+
+    let data
+    try {
+      data = await parseImportFile(file)
+    } catch {
+      window.alert('This file could not be read as a ChronoKanban export.')
+      return
+    }
+
+    const existingBoards = Object.values(useStore.getState().boards)
+    const conflicts = findBoardConflicts(data, existingBoards)
+
+    if (conflicts.length === 0) {
+      await mergeImportFile(data, [], {})
+      await loadFromDB()
+      return
+    }
+    setImportFlow({ data, conflicts, currentIndex: 0, decisions: {} })
+  }
+
+  async function handleConflictDecision(decision: ConflictDecision) {
+    if (!importFlow) return
+    const conflict = importFlow.conflicts[importFlow.currentIndex]
+    const decisions = { ...importFlow.decisions, [conflict.incoming.id]: decision }
+    const nextIndex = importFlow.currentIndex + 1
+
+    if (nextIndex >= importFlow.conflicts.length) {
+      await mergeImportFile(importFlow.data, importFlow.conflicts, decisions)
+      await loadFromDB()
+      setImportFlow(null)
+    } else {
+      setImportFlow({ ...importFlow, decisions, currentIndex: nextIndex })
+    }
+  }
 
   const bucketWidthIndex = BUCKET_WIDTH_OPTIONS.findIndex((o) => o.value === preferences.bucketWidth)
   const bucketWidthLabel = BUCKET_WIDTH_OPTIONS[bucketWidthIndex]?.label ?? 'Default'
@@ -55,7 +113,7 @@ export function SettingsPanel({ onDataDeleted }: SettingsPanelProps) {
         aria-label="Settings"
         className="rounded px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
       >
-        ⚙️
+        Settings
       </button>
       {open && (
         <div className="absolute right-0 z-20 mt-1 w-64 rounded border border-gray-200 bg-white p-3 shadow-lg dark:border-gray-700 dark:bg-gray-800">
@@ -136,6 +194,27 @@ export function SettingsPanel({ onDataDeleted }: SettingsPanelProps) {
             Desktop notifications
           </label>
 
+          <div className="mt-3 flex gap-1 border-t border-gray-200 pt-3 dark:border-gray-700">
+            <button
+              onClick={() => {
+                exportData()
+                setOpen(false)
+              }}
+              className="flex-1 rounded px-1 py-1 text-left text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
+            >
+              Export
+            </button>
+            <button
+              onClick={() => {
+                fileInputRef.current?.click()
+                setOpen(false)
+              }}
+              className="flex-1 rounded px-1 py-1 text-left text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
+            >
+              Import
+            </button>
+          </div>
+
           <div className="mt-3 border-t border-gray-200 pt-3 dark:border-gray-700">
             <button
               onClick={() => {
@@ -162,6 +241,14 @@ export function SettingsPanel({ onDataDeleted }: SettingsPanelProps) {
         </div>
       )}
 
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="application/json"
+        onChange={handleFileSelected}
+        className="hidden"
+      />
+
       {fieldsOpen && <FieldsPanel onClose={() => setFieldsOpen(false)} />}
 
       {confirmingDelete && (
@@ -174,6 +261,13 @@ export function SettingsPanel({ onDataDeleted }: SettingsPanelProps) {
             setConfirmingDelete(false)
             onDataDeleted()
           }}
+        />
+      )}
+
+      {importFlow && (
+        <ImportConflictDialog
+          boardName={importFlow.conflicts[importFlow.currentIndex].incoming.name}
+          onDecision={handleConflictDecision}
         />
       )}
     </div>
