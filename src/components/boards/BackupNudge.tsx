@@ -25,8 +25,8 @@ export function BackupNudge() {
   return (
     <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-100">
       <span>
-        Your data lives only in this browser — last backup:{' '}
-        <strong>{Math.floor(daysSince)} days ago</strong>.
+        Your data lives only in this browser — last backup: <strong>{Math.floor(daysSince)} days ago</strong>.
+        Browser cleanup settings (like Chrome's "clear on exit") can erase it without warning.
       </span>
       <span className="flex items-center gap-3">
         <button

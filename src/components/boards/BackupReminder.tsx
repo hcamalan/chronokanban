@@ -22,8 +22,10 @@ export function BackupReminder() {
   return (
     <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-100">
       <span>
-        Heads up: ChronoKanban keeps your data only in this browser. Export a backup now and then so you never
-        lose it — the <strong>Export</strong> button is up in the top bar.
+        Heads up: ChronoKanban keeps your data only in this browser. Browser settings like Chrome's "Clear
+        cookies and site data when you close all windows" can wipe it without warning — export a backup now and
+        then (the <strong>Export</strong> button is up in the top bar), or install the app for more durable
+        storage.
       </span>
       <span className="flex items-center gap-3">
         <button

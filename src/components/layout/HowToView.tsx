@@ -227,9 +227,12 @@ export function HowToView() {
 
       <Chapter title="Backing up your data">
         <p>
-          Since everything is stored locally, clearing your browser data would erase it. Use <strong>Export</strong>{' '}
-          any time to download a full backup as a JSON file, and <strong>Import</strong> to restore it later or move
-          it to another browser or device. Importing replaces everything currently in the app, so use it carefully.
+          Since everything is stored locally, clearing your browser data would erase it — including browser
+          settings like Chrome's "Clear cookies and site data when you close all windows," which some people have
+          turned on without realizing it wipes every site's local storage too. Installing ChronoKanban as an app
+          also tends to be more durable than a regular tab. Use <strong>Export</strong> any time to download a
+          full backup as a JSON file, and <strong>Import</strong> to restore it later or move it to another
+          browser or device. Importing replaces everything currently in the app, so use it carefully.
         </p>
         <p>
           If it's been more than a week since your last export, the Boards page shows a gentle reminder (after a
