@@ -53,7 +53,6 @@ interface AppState {
   updateTask: (id: string, patch: Partial<TaskCard>) => void
   deleteTask: (id: string) => void
   deleteTasksWithUndo: (ids: string[]) => void
-  duplicateTask: (id: string) => string | undefined
   moveTask: (taskId: string, toBucketId: string, toIndex: number) => void
   moveTaskToBoard: (taskId: string, newBoardId: string) => void
 
@@ -449,29 +448,6 @@ export const useStore = create<AppState>((set, get) => {
           })),
       },
     })
-  },
-  duplicateTask: (taskId) => {
-    const task = get().tasks[taskId]
-    if (!task) return
-    const id = crypto.randomUUID()
-    const order = Object.values(get().tasks).filter(
-      (t) => t.bucketId === task.bucketId && t.status !== 'completed',
-    ).length
-    const duplicate: TaskCard = {
-      ...task,
-      id,
-      name: `${task.name} (copy)`,
-      status: 'not-started',
-      order,
-      timer: { isRunning: false, elapsedSeconds: 0, startedAt: null },
-      createdAt: Date.now(),
-      completedAt: null,
-      subtasks: task.subtasks.map((s) => ({ ...s, id: crypto.randomUUID() })),
-    }
-    set((state) => ({ tasks: { ...state.tasks, [id]: duplicate } }))
-    repo.putTask(duplicate)
-    logActivity(id, duplicate.name, 'create', duplicate.status)
-    return id
   },
   moveTask: (taskId, toBucketId, toIndex) => {
     const state = get()

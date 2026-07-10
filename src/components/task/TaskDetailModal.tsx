@@ -9,11 +9,18 @@ import { ConfirmDialog } from '../boards/ConfirmDialog'
 import { flushAllDebouncers } from '../../store/persist'
 import { formatHHMM, parseHHMM } from '../../utils/time'
 import { blurOnEnter, blurOnCtrlEnter } from '../../utils/keyboard'
-import type { Urgency, Importance, TaskStatus, RecurrenceUnit } from '../../types'
+import { buildGoogleCalendarUrl, downloadIcsFile } from '../../utils/calendarExport'
+import type { Urgency, Importance, TaskStatus, RecurrenceUnit, TaskCard } from '../../types'
 
 interface TaskDetailModalProps {
   taskId: string
   onClose: () => void
+}
+
+/** Whether the task has been edited since `snapshot` was taken (a plain, JSON-comparable object). */
+function hasUnsavedChanges(snapshot: TaskCard | null, current: TaskCard | null): boolean {
+  if (snapshot == null || current == null) return false
+  return JSON.stringify(snapshot) !== JSON.stringify(current)
 }
 
 export function TaskDetailModal({ taskId, onClose }: TaskDetailModalProps) {
@@ -27,20 +34,22 @@ export function TaskDetailModal({ taskId, onClose }: TaskDetailModalProps) {
   const updateTask = useStore((s) => s.updateTask)
   const moveTaskToBoard = useStore((s) => s.moveTaskToBoard)
   const deleteTask = useStore((s) => s.deleteTask)
-  const duplicateTask = useStore((s) => s.duplicateTask)
   const startTimer = useStore((s) => s.startTimer)
   const pauseTimer = useStore((s) => s.pauseTimer)
   const resetTimer = useStore((s) => s.resetTimer)
   const setElapsedTime = useStore((s) => s.setElapsedTime)
   const completeTask = useStore((s) => s.completeTask)
   const uncompleteTask = useStore((s) => s.uncompleteTask)
+  const timeTrackingEnabled = useStore((s) => s.preferences.timeTrackingEnabled)
   const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const [confirmingDiscard, setConfirmingDiscard] = useState(false)
   const [elapsedText, setElapsedText] = useState(() => formatHHMM(task?.timer.elapsedSeconds ?? 0))
   const [elapsedFocused, setElapsedFocused] = useState(false)
   const [descriptionExpanded, setDescriptionExpanded] = useState(false)
   const [editingDescription, setEditingDescription] = useState(false)
   const [maximized, setMaximized] = useState(false)
   const [newSubtaskText, setNewSubtaskText] = useState('')
+  const [snapshot, setSnapshot] = useState<TaskCard | null>(null)
   const nameInputRef = useRef<HTMLInputElement>(null)
 
   // Newly-created tasks (from addTaskAtTop) start with an empty name — focus it immediately so
@@ -49,6 +58,12 @@ export function TaskDetailModal({ taskId, onClose }: TaskDetailModalProps) {
     if (task?.name === '') nameInputRef.current?.focus()
     // oxlint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // Snapshot the task as it was when this task was opened, so "Discard changes" has something to
+  // revert to. Re-taken whenever a different task is opened in this same modal instance.
+  useEffect(() => {
+    setSnapshot(useStore.getState().tasks[taskId] ?? null)
+  }, [taskId])
 
   // Re-sync the displayed text whenever the stored elapsed time changes (timer actions, or our own
   // committed edits) — but never while the user is actively focused in the field, so it can't clobber
@@ -59,6 +74,41 @@ export function TaskDetailModal({ taskId, onClose }: TaskDetailModalProps) {
     }
   }, [task?.timer.elapsedSeconds, elapsedFocused, task])
 
+  // Esc discards (confirming first if something actually changed); Enter (outside a text field, no
+  // confirm dialog open) saves & closes. Guards against stacking when a confirm dialog is already up.
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (!task) return
+      const tag = (document.activeElement as HTMLElement | null)?.tagName
+      const isTyping = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT'
+
+      if (e.key === 'Escape') {
+        if (confirmingDelete) {
+          setConfirmingDelete(false)
+          return
+        }
+        if (confirmingDiscard) {
+          setConfirmingDiscard(false)
+          return
+        }
+        if (hasUnsavedChanges(snapshot, task)) {
+          setConfirmingDiscard(true)
+        } else {
+          flushAllDebouncers()
+          onClose()
+        }
+        return
+      }
+
+      if (e.key === 'Enter' && !isTyping && !confirmingDelete && !confirmingDiscard) {
+        flushAllDebouncers()
+        onClose()
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [task, snapshot, confirmingDelete, confirmingDiscard, onClose])
+
   if (!task) return null
 
   const isCompleted = task.status === 'completed'
@@ -66,6 +116,17 @@ export function TaskDetailModal({ taskId, onClose }: TaskDetailModalProps) {
   const handleClose = () => {
     flushAllDebouncers()
     onClose()
+  }
+
+  function handleDiscardRequest() {
+    if (hasUnsavedChanges(snapshot, task)) setConfirmingDiscard(true)
+    else handleClose()
+  }
+
+  function handleDiscardConfirm() {
+    if (snapshot) updateTask(taskId, snapshot)
+    setConfirmingDiscard(false)
+    handleClose()
   }
 
   function commitElapsedTime() {
@@ -111,77 +172,73 @@ export function TaskDetailModal({ taskId, onClose }: TaskDetailModalProps) {
           </div>
           <div className="ml-3 flex flex-shrink-0 items-center gap-1">
             <button
-              onClick={handleClose}
-              aria-label="Minimize"
-              className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800"
-            >
-              −
-            </button>
-            <button
               onClick={() => setMaximized((v) => !v)}
-              aria-label={maximized ? 'Restore' : 'Maximize'}
+              aria-label={maximized ? 'Minimize' : 'Maximize'}
               className="hidden rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 sm:inline dark:hover:bg-gray-800"
             >
               {maximized ? '❐' : '□'}
             </button>
             <button
               onClick={handleClose}
-              aria-label="Close"
+              aria-label="Save & close"
+              title="Save & close"
               className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800"
             >
-              ✕
+              ✓
             </button>
           </div>
         </div>
 
-        <div className="mb-4 flex flex-wrap items-center gap-3">
-          {!isCompleted && (
-            <PlayPauseButton
-              timer={task.timer}
-              onStart={() => startTimer(taskId)}
-              onPause={() => pauseTimer(taskId)}
-              size="md"
-            />
-          )}
-          <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-            Time elapsed
-            <input
-              type="text"
-              inputMode="numeric"
-              placeholder="0:00"
-              value={elapsedText}
-              onChange={(e) => setElapsedText(e.target.value)}
-              onFocus={() => setElapsedFocused(true)}
-              onBlur={() => {
-                setElapsedFocused(false)
-                commitElapsedTime()
-              }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') e.currentTarget.blur()
-              }}
-              className="w-16 rounded border border-gray-300 px-2 py-1 font-mono dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-            />
-          </label>
-          {task.estimatedHours != null && task.estimatedHours > 0 && (
-            <span
-              className={`text-xs ${
-                task.timer.elapsedSeconds > task.estimatedHours * 3600
-                  ? 'text-red-600 dark:text-red-400'
-                  : 'text-gray-400 dark:text-gray-500'
-              }`}
-            >
-              of {task.estimatedHours}h estimated
-            </span>
-          )}
-          {!isCompleted && (
-            <button
-              onClick={() => resetTimer(taskId)}
-              className="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-            >
-              Reset
-            </button>
-          )}
-        </div>
+        {timeTrackingEnabled && (
+          <div className="mb-4 flex flex-wrap items-center gap-3">
+            {!isCompleted && (
+              <PlayPauseButton
+                timer={task.timer}
+                onStart={() => startTimer(taskId)}
+                onPause={() => pauseTimer(taskId)}
+                size="md"
+              />
+            )}
+            <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+              Time elapsed
+              <input
+                type="text"
+                inputMode="numeric"
+                placeholder="0:00"
+                value={elapsedText}
+                onChange={(e) => setElapsedText(e.target.value)}
+                onFocus={() => setElapsedFocused(true)}
+                onBlur={() => {
+                  setElapsedFocused(false)
+                  commitElapsedTime()
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') e.currentTarget.blur()
+                }}
+                className="w-16 rounded border border-gray-300 px-2 py-1 font-mono dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+              />
+            </label>
+            {task.estimatedHours != null && task.estimatedHours > 0 && (
+              <span
+                className={`text-xs ${
+                  task.timer.elapsedSeconds > task.estimatedHours * 3600
+                    ? 'text-red-600 dark:text-red-400'
+                    : 'text-gray-400 dark:text-gray-500'
+                }`}
+              >
+                of {task.estimatedHours}h estimated
+              </span>
+            )}
+            {!isCompleted && (
+              <button
+                onClick={() => resetTimer(taskId)}
+                className="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              >
+                Reset
+              </button>
+            )}
+          </div>
+        )}
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <label className="flex flex-col gap-1 text-sm text-gray-600 dark:text-gray-300">
@@ -253,6 +310,38 @@ export function TaskDetailModal({ taskId, onClose }: TaskDetailModalProps) {
               onChange={(e) => updateTask(taskId, { dueDate: e.target.value || null })}
               className="rounded border border-gray-300 px-2 py-1 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
             />
+            <span className="flex flex-wrap gap-2 pt-0.5">
+              <a
+                href={task.dueDate ? (buildGoogleCalendarUrl(task) ?? undefined) : undefined}
+                target="_blank"
+                rel="noopener noreferrer"
+                title={task.dueDate ? undefined : 'Set a due date first'}
+                aria-disabled={!task.dueDate}
+                onClick={(e) => {
+                  if (!task.dueDate) e.preventDefault()
+                }}
+                className={`text-xs underline ${
+                  task.dueDate
+                    ? 'text-blue-600 hover:no-underline dark:text-blue-400'
+                    : 'cursor-not-allowed text-gray-300 dark:text-gray-600'
+                }`}
+              >
+                Add to Google Calendar
+              </a>
+              <button
+                type="button"
+                onClick={() => downloadIcsFile(task)}
+                disabled={!task.dueDate}
+                title={task.dueDate ? undefined : 'Set a due date first'}
+                className={`text-xs underline ${
+                  task.dueDate
+                    ? 'text-blue-600 hover:no-underline dark:text-blue-400'
+                    : 'cursor-not-allowed text-gray-300 dark:text-gray-600'
+                }`}
+              >
+                Download .ics
+              </button>
+            </span>
           </label>
 
           <label className="flex flex-col gap-1 text-sm text-gray-600 dark:text-gray-300">
@@ -464,13 +553,10 @@ export function TaskDetailModal({ taskId, onClose }: TaskDetailModalProps) {
 
         <div className="mt-6 flex justify-end gap-2">
           <button
-            onClick={() => {
-              duplicateTask(taskId)
-              handleClose()
-            }}
+            onClick={handleDiscardRequest}
             className="rounded px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
           >
-            Duplicate
+            Discard changes
           </button>
           <button
             onClick={() => setConfirmingDelete(true)}
@@ -490,6 +576,15 @@ export function TaskDetailModal({ taskId, onClose }: TaskDetailModalProps) {
             setConfirmingDelete(false)
             onClose()
           }}
+        />
+      )}
+
+      {confirmingDiscard && (
+        <ConfirmDialog
+          message="Are you sure you want to discard your changes?"
+          confirmLabel="Discard"
+          onCancel={() => setConfirmingDiscard(false)}
+          onConfirm={handleDiscardConfirm}
         />
       )}
     </div>

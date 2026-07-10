@@ -43,11 +43,6 @@ function App() {
       const tag = (document.activeElement as HTMLElement | null)?.tagName
       const isTyping = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT'
 
-      if (e.key === 'Escape') {
-        setSelectedTaskId(null)
-        return
-      }
-
       // Undo last delete — only takes over from the browser's native undo when a delete is
       // actually pending, so Ctrl/Cmd+Z still works normally while editing text.
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
