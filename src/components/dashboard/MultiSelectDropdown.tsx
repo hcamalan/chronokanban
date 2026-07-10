@@ -10,9 +10,11 @@ interface MultiSelectDropdownProps {
   options: Option[]
   selected: string[]
   onChange: (values: string[]) => void
+  /** Shown when nothing is selected. Default 'All' fits filters where 0-selected means "no filter". */
+  emptyLabel?: string
 }
 
-export function MultiSelectDropdown({ label, options, selected, onChange }: MultiSelectDropdownProps) {
+export function MultiSelectDropdown({ label, options, selected, onChange, emptyLabel = 'All' }: MultiSelectDropdownProps) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
@@ -35,7 +37,7 @@ export function MultiSelectDropdown({ label, options, selected, onChange }: Mult
         className="flex items-center gap-1 rounded border border-gray-300 px-2 py-1 text-sm text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
       >
         <span className="font-medium">{label}:</span>
-        <span>{selected.length ? selected.length : 'All'}</span>
+        <span>{selected.length ? selected.length : emptyLabel}</span>
         <span className="text-gray-400">▾</span>
       </button>
       {open && (

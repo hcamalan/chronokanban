@@ -184,7 +184,13 @@ export function CalendarView({ tasks, onOpenTask }: CalendarViewProps) {
               </option>
             ))}
           </select>
-          <MultiSelectDropdown label="Show" options={FILTER_OPTIONS} selected={filters} onChange={setFilters} />
+          <MultiSelectDropdown
+            label="Show"
+            options={FILTER_OPTIONS}
+            selected={filters}
+            onChange={setFilters}
+            emptyLabel="None"
+          />
           <SortByDropdown
             label="Sort by"
             options={SORT_OPTIONS}
@@ -209,7 +215,7 @@ export function CalendarView({ tasks, onOpenTask }: CalendarViewProps) {
             onClick={() => setAnchorDateKey(todayDateKey())}
             className="rounded px-2 py-1 text-xs text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
           >
-            Today
+            {viewMode === 'week' ? 'Current week' : viewMode === 'month' ? 'Current month' : 'Today'}
           </button>
           <button
             onClick={() => setAnchorDateKey(shiftAnchor(viewMode, anchorDateKey, 1))}
