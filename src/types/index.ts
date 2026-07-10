@@ -13,6 +13,7 @@ export interface Preferences {
   colorMode: ColorMode
   showDescriptionOnCard: boolean
   notificationsEnabled: boolean
+  timeTrackingEnabled: boolean
 }
 
 export interface Category {

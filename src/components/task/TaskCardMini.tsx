@@ -22,6 +22,7 @@ export function TaskCardMini({ task, onClick, selectMode, selected, onToggleSele
   const dateFormat = useStore((s) => s.preferences.dateFormat)
   const colorMode = useStore((s) => s.preferences.colorMode)
   const showDescriptionOnCard = useStore((s) => s.preferences.showDescriptionOnCard)
+  const timeTrackingEnabled = useStore((s) => s.preferences.timeTrackingEnabled)
   const isCompleted = task.status === 'completed'
   const categoryColor = category ? remapCategoryColor(category.color, colorMode) : undefined
   const highTagColor = getSemanticColors(colorMode).level.high
@@ -107,22 +108,23 @@ export function TaskCardMini({ task, onClick, selectMode, selected, onToggleSele
       {showDescriptionOnCard && task.description.trim() && (
         <p className="line-clamp-3 text-xs text-gray-500 dark:text-gray-400">{task.description}</p>
       )}
-      {isCompleted ? (
-        <span className="font-mono text-xs text-gray-400 dark:text-gray-500">
-          {formatDuration(task.timer.elapsedSeconds)}
-        </span>
-      ) : (
-        <div className="flex items-center gap-1.5">
-          <PlayPauseButton
-            timer={task.timer}
-            onStart={() => startTimer(task.id)}
-            onPause={() => pauseTimer(task.id)}
-          />
-          {longRunning && (
-            <span title="Running for over 8 hours — you may have forgotten to pause this">⚠</span>
-          )}
-        </div>
-      )}
+      {timeTrackingEnabled &&
+        (isCompleted ? (
+          <span className="font-mono text-xs text-gray-400 dark:text-gray-500">
+            {formatDuration(task.timer.elapsedSeconds)}
+          </span>
+        ) : (
+          <div className="flex items-center gap-1.5">
+            <PlayPauseButton
+              timer={task.timer}
+              onStart={() => startTimer(task.id)}
+              onPause={() => pauseTimer(task.id)}
+            />
+            {longRunning && (
+              <span title="Running for over 8 hours — you may have forgotten to pause this">⚠</span>
+            )}
+          </div>
+        ))}
     </div>
   )
 }

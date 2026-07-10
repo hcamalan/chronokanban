@@ -14,6 +14,7 @@ function defaultPreferences(): Preferences {
     colorMode: 'default',
     showDescriptionOnCard: false,
     notificationsEnabled: false,
+    timeTrackingEnabled: true,
   }
 }
 

@@ -119,6 +119,15 @@ export function SettingsPanel({ onDataDeleted }: SettingsPanelProps) {
           <label className="mt-3 flex items-center gap-2 px-1 text-sm text-gray-700 dark:text-gray-200">
             <input
               type="checkbox"
+              checked={preferences.timeTrackingEnabled}
+              onChange={(e) => setPreference('timeTrackingEnabled', e.target.checked)}
+            />
+            Time tracking
+          </label>
+
+          <label className="mt-3 flex items-center gap-2 px-1 text-sm text-gray-700 dark:text-gray-200">
+            <input
+              type="checkbox"
               checked={preferences.notificationsEnabled}
               onChange={async (e) => {
                 if (e.target.checked) {
