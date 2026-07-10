@@ -90,6 +90,16 @@ export function HowToView() {
           reorder them. To move a task to a <em>different</em> board, open the task and change its "Board" field
           instead.
         </p>
+        <p>
+          Collapse a bucket using the chevron next to its name to save space - on a touchscreen, tap anywhere on a
+          collapsed bucket's name to expand it again. Deleting a bucket that still has tasks in it asks for
+          confirmation first.
+        </p>
+        <p>
+          On a touchscreen, press and hold a card briefly to start dragging it - buckets collapse automatically to
+          make room while you drag, and the one you're hovering over is highlighted. You can also swipe a card left
+          to delete it, with a few seconds to undo afterward.
+        </p>
       </Chapter>
 
       <Chapter title="Tracking time">
@@ -236,6 +246,10 @@ export function HowToView() {
           replaces everything currently in the app, so use it carefully.
         </p>
         <p>
+          The first time you use ChronoKanban, a one-time banner also nudges you to back up early - export once
+          or dismiss it and it won't show again.
+        </p>
+        <p>
           If it's been more than a week since your last export, the Boards page shows a gentle reminder (after a
           few days' grace period on a brand-new install) - take it seriously: a browser cleanup can wipe local
           data without asking.
@@ -246,7 +260,8 @@ export function HowToView() {
         <p>
           ChronoKanban makes no network calls of any kind - all your data lives in this browser's local storage.
           Once you've loaded it here, it keeps working with no internet connection at all, and it can be installed
-          like an app from your browser's menu.
+          like an app - ChronoKanban offers a one-time install prompt (or, on iPhone/iPad, instructions for adding
+          it to your home screen), or you can always do it manually from your browser's menu.
         </p>
         <p>
           To run it on a machine with no internet access whatsoever, download the source, run{' '}
