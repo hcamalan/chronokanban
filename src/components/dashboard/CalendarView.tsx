@@ -203,24 +203,24 @@ export function CalendarView({ tasks, onOpenTask }: CalendarViewProps) {
       </div>
 
       <div className="mb-3 flex items-center justify-between gap-2">
-        <div className="flex items-center gap-1">
+        <div className="flex overflow-hidden rounded border border-gray-300 dark:border-gray-600">
           <button
             onClick={() => setAnchorDateKey(shiftAnchor(viewMode, anchorDateKey, -1))}
             aria-label="Previous"
-            className="rounded p-1 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+            className="border-r border-gray-300 px-2 py-1 text-gray-600 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
           >
             ←
           </button>
           <button
             onClick={() => setAnchorDateKey(todayDateKey())}
-            className="rounded px-2 py-1 text-xs text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+            className="border-r border-gray-300 px-2 py-1 text-xs text-gray-600 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
           >
-            {viewMode === 'week' ? 'Current week' : viewMode === 'month' ? 'Current month' : 'Today'}
+            Jump to today
           </button>
           <button
             onClick={() => setAnchorDateKey(shiftAnchor(viewMode, anchorDateKey, 1))}
             aria-label="Next"
-            className="rounded p-1 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+            className="px-2 py-1 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
           >
             →
           </button>

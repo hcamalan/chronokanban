@@ -60,7 +60,7 @@ export function getVisibleDates(viewMode: CalendarViewMode, anchorDateKey: strin
 
   if (viewMode === 'week') {
     const start = new Date(anchor)
-    start.setDate(start.getDate() - start.getDay())
+    start.setDate(start.getDate() - ((start.getDay() + 6) % 7)) // Monday-start, to match ISO week numbers
     return Array.from({ length: 7 }, (_, i) => {
       const d = new Date(start)
       d.setDate(d.getDate() + i)
@@ -68,16 +68,27 @@ export function getVisibleDates(viewMode: CalendarViewMode, anchorDateKey: strin
     })
   }
 
-  // month: a fixed 6-week (42-day) grid starting on the Sunday on/before the 1st, so the layout
+  // month: a fixed 6-week (42-day) grid starting on the Monday on/before the 1st, so the layout
   // height stays consistent across months regardless of how many weeks each one actually spans.
   const firstOfMonth = new Date(anchor.getFullYear(), anchor.getMonth(), 1)
   const startOfGrid = new Date(firstOfMonth)
-  startOfGrid.setDate(startOfGrid.getDate() - firstOfMonth.getDay())
+  startOfGrid.setDate(startOfGrid.getDate() - ((firstOfMonth.getDay() + 6) % 7))
   return Array.from({ length: 42 }, (_, i) => {
     const d = new Date(startOfGrid)
     d.setDate(d.getDate() + i)
     return { dateKey: toDateKey(d), inCurrentPeriod: d.getMonth() === anchor.getMonth() }
   })
+}
+
+/** ISO 8601 week number (Monday-start weeks, year determined by the week's Thursday). */
+export function isoWeekNumber(date: Date): number {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
+  const dayNum = (d.getUTCDay() + 6) % 7
+  d.setUTCDate(d.getUTCDate() - dayNum + 3)
+  const firstThursday = new Date(Date.UTC(d.getUTCFullYear(), 0, 4))
+  const firstDayNum = (firstThursday.getUTCDay() + 6) % 7
+  firstThursday.setUTCDate(firstThursday.getUTCDate() - firstDayNum + 3)
+  return 1 + Math.round((d.getTime() - firstThursday.getTime()) / (7 * 24 * 3600 * 1000))
 }
 
 export function getRangeLabel(viewMode: CalendarViewMode, anchorDateKey: string): string {
@@ -95,9 +106,14 @@ export function getRangeLabel(viewMode: CalendarViewMode, anchorDateKey: string)
   if (viewMode === 'day') return full(first)
 
   const short = (d: Date) => `${MONTH_SHORT[d.getMonth()]} ${d.getDate()}`
-  return first.getFullYear() === last.getFullYear()
-    ? `${short(first)} – ${short(last)}, ${last.getFullYear()}`
-    : `${full(first)} – ${full(last)}`
+  const range =
+    first.getFullYear() === last.getFullYear()
+      ? `${short(first)} – ${short(last)}, ${last.getFullYear()}`
+      : `${full(first)} – ${full(last)}`
+
+  // `first` is already the Monday that starts the displayed week, so its ISO week number applies
+  // to the whole range without adjustment.
+  return viewMode === 'week' ? `${range} (CW${isoWeekNumber(first)})` : range
 }
 
 export function shiftAnchor(viewMode: CalendarViewMode, anchorDateKey: string, direction: 1 | -1): string {
