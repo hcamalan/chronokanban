@@ -41,6 +41,7 @@ export function TaskDetailModal({ taskId, onClose }: TaskDetailModalProps) {
   const completeTask = useStore((s) => s.completeTask)
   const uncompleteTask = useStore((s) => s.uncompleteTask)
   const timeTrackingEnabled = useStore((s) => s.preferences.timeTrackingEnabled)
+  const hiddenFields = useStore((s) => s.preferences.hiddenFields)
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [confirmingDiscard, setConfirmingDiscard] = useState(false)
   const [elapsedText, setElapsedText] = useState(() => formatHHMM(task?.timer.elapsedSeconds ?? 0))
@@ -174,9 +175,10 @@ export function TaskDetailModal({ taskId, onClose }: TaskDetailModalProps) {
             <button
               onClick={() => setMaximized((v) => !v)}
               aria-label={maximized ? 'Minimize' : 'Maximize'}
+              title={maximized ? 'Minimize' : 'Maximize'}
               className="hidden rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 sm:inline dark:hover:bg-gray-800"
             >
-              {maximized ? '❐' : '□'}
+              {maximized ? '□' : '❐'}
             </button>
             <button
               onClick={handleClose}
@@ -286,64 +288,69 @@ export function TaskDetailModal({ taskId, onClose }: TaskDetailModalProps) {
             </select>
           </label>
 
-          <label className="flex flex-col gap-1 text-sm text-gray-600 dark:text-gray-300">
-            Assigned to
-            <input
-              value={task.assignedTo}
-              onChange={(e) => updateTask(taskId, { assignedTo: e.target.value })}
-              onKeyDown={blurOnEnter}
-              list="assignee-suggestions"
-              className="rounded border border-gray-300 px-2 py-1 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-            />
-            <datalist id="assignee-suggestions">
-              {assigneeSuggestions.map((name) => (
-                <option key={name} value={name} />
-              ))}
-            </datalist>
-          </label>
+          {!hiddenFields.includes('assignedTo') && (
+            <label className="flex flex-col gap-1 text-sm text-gray-600 dark:text-gray-300">
+              Assigned to
+              <input
+                value={task.assignedTo}
+                onChange={(e) => updateTask(taskId, { assignedTo: e.target.value })}
+                onKeyDown={blurOnEnter}
+                list="assignee-suggestions"
+                className="rounded border border-gray-300 px-2 py-1 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+              />
+              <datalist id="assignee-suggestions">
+                {assigneeSuggestions.map((name) => (
+                  <option key={name} value={name} />
+                ))}
+              </datalist>
+            </label>
+          )}
 
-          <label className="flex flex-col gap-1 text-sm text-gray-600 dark:text-gray-300">
-            Due date
-            <input
-              type="date"
-              value={task.dueDate ?? ''}
-              onChange={(e) => updateTask(taskId, { dueDate: e.target.value || null })}
-              className="rounded border border-gray-300 px-2 py-1 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-            />
-            <span className="flex flex-wrap gap-2 pt-0.5">
-              <a
-                href={task.dueDate ? (buildGoogleCalendarUrl(task) ?? undefined) : undefined}
-                target="_blank"
-                rel="noopener noreferrer"
-                title={task.dueDate ? undefined : 'Set a due date first'}
-                aria-disabled={!task.dueDate}
-                onClick={(e) => {
-                  if (!task.dueDate) e.preventDefault()
-                }}
-                className={`text-xs underline ${
-                  task.dueDate
-                    ? 'text-blue-600 hover:no-underline dark:text-blue-400'
-                    : 'cursor-not-allowed text-gray-300 dark:text-gray-600'
-                }`}
-              >
-                Add to Google Calendar
-              </a>
-              <button
-                type="button"
-                onClick={() => downloadIcsFile(task)}
-                disabled={!task.dueDate}
-                title={task.dueDate ? undefined : 'Set a due date first'}
-                className={`text-xs underline ${
-                  task.dueDate
-                    ? 'text-blue-600 hover:no-underline dark:text-blue-400'
-                    : 'cursor-not-allowed text-gray-300 dark:text-gray-600'
-                }`}
-              >
-                Download .ics
-              </button>
-            </span>
-          </label>
+          {!hiddenFields.includes('dueDate') && (
+            <label className="flex flex-col gap-1 text-sm text-gray-600 dark:text-gray-300">
+              Due date
+              <input
+                type="date"
+                value={task.dueDate ?? ''}
+                onChange={(e) => updateTask(taskId, { dueDate: e.target.value || null })}
+                className="rounded border border-gray-300 px-2 py-1 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+              />
+              <span className="flex flex-wrap gap-2 pt-0.5">
+                <a
+                  href={task.dueDate ? (buildGoogleCalendarUrl(task) ?? undefined) : undefined}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={task.dueDate ? undefined : 'Set a due date first'}
+                  aria-disabled={!task.dueDate}
+                  onClick={(e) => {
+                    if (!task.dueDate) e.preventDefault()
+                  }}
+                  className={`text-xs underline ${
+                    task.dueDate
+                      ? 'text-blue-600 hover:no-underline dark:text-blue-400'
+                      : 'cursor-not-allowed text-gray-300 dark:text-gray-600'
+                  }`}
+                >
+                  Add to Google Calendar
+                </a>
+                <button
+                  type="button"
+                  onClick={() => downloadIcsFile(task)}
+                  disabled={!task.dueDate}
+                  title={task.dueDate ? undefined : 'Set a due date first'}
+                  className={`text-xs underline ${
+                    task.dueDate
+                      ? 'text-blue-600 hover:no-underline dark:text-blue-400'
+                      : 'cursor-not-allowed text-gray-300 dark:text-gray-600'
+                  }`}
+                >
+                  Download .ics
+                </button>
+              </span>
+            </label>
+          )}
 
+          {!hiddenFields.includes('storyPoints') && (
           <label className="flex flex-col gap-1 text-sm text-gray-600 dark:text-gray-300">
             Story points
             <input
@@ -359,7 +366,9 @@ export function TaskDetailModal({ taskId, onClose }: TaskDetailModalProps) {
               className="rounded border border-gray-300 px-2 py-1 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
             />
           </label>
+          )}
 
+          {!hiddenFields.includes('estimatedHours') && (
           <label className="flex flex-col gap-1 text-sm text-gray-600 dark:text-gray-300">
             Estimated hours
             <input
@@ -376,7 +385,9 @@ export function TaskDetailModal({ taskId, onClose }: TaskDetailModalProps) {
               className="rounded border border-gray-300 px-2 py-1 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
             />
           </label>
+          )}
 
+          {!hiddenFields.includes('urgency') && (
           <label className="flex flex-col gap-1 text-sm text-gray-600 dark:text-gray-300">
             Urgency
             <select
@@ -390,7 +401,9 @@ export function TaskDetailModal({ taskId, onClose }: TaskDetailModalProps) {
               <option value="high">High</option>
             </select>
           </label>
+          )}
 
+          {!hiddenFields.includes('importance') && (
           <label className="flex flex-col gap-1 text-sm text-gray-600 dark:text-gray-300">
             Importance
             <select
@@ -406,7 +419,9 @@ export function TaskDetailModal({ taskId, onClose }: TaskDetailModalProps) {
               <option value="high">High</option>
             </select>
           </label>
+          )}
 
+          {!hiddenFields.includes('dueDate') && (
           <label className="flex flex-col gap-1 text-sm text-gray-600 dark:text-gray-300">
             Repeat
             <div className="flex items-center gap-2">
@@ -453,8 +468,10 @@ export function TaskDetailModal({ taskId, onClose }: TaskDetailModalProps) {
             </div>
             {!task.dueDate && <span className="text-xs text-gray-400">Set a due date to enable</span>}
           </label>
+          )}
         </div>
 
+        {!hiddenFields.includes('subtasks') && (
         <div className="mt-4">
           <h3 className="mb-2 text-sm text-gray-600 dark:text-gray-300">Sub-tasks</h3>
           <div className="flex flex-col gap-1">
@@ -506,7 +523,10 @@ export function TaskDetailModal({ taskId, onClose }: TaskDetailModalProps) {
             />
           </form>
         </div>
+        )}
 
+        {!hiddenFields.includes('description') && (
+        <>
         <div className="mt-4 flex flex-col gap-1 text-sm text-gray-600 dark:text-gray-300">
           Description
           {editingDescription || task.description.trim() === '' ? (
@@ -548,6 +568,8 @@ export function TaskDetailModal({ taskId, onClose }: TaskDetailModalProps) {
             {descriptionExpanded ? 'Collapse' : 'Expand'}
           </button>
         </div>
+        </>
+        )}
 
         <AttachmentList taskId={taskId} />
 

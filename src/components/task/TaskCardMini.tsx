@@ -23,6 +23,7 @@ export function TaskCardMini({ task, onClick, selectMode, selected, onToggleSele
   const colorMode = useStore((s) => s.preferences.colorMode)
   const showDescriptionOnCard = useStore((s) => s.preferences.showDescriptionOnCard)
   const timeTrackingEnabled = useStore((s) => s.preferences.timeTrackingEnabled)
+  const hiddenFields = useStore((s) => s.preferences.hiddenFields)
   const isCompleted = task.status === 'completed'
   const categoryColor = category ? remapCategoryColor(category.color, colorMode) : undefined
   const highTagColor = getSemanticColors(colorMode).level.high
@@ -78,17 +79,17 @@ export function TaskCardMini({ task, onClick, selectMode, selected, onToggleSele
             {category.name}
           </span>
         )}
-        {task.subtasks.length > 0 && (
+        {!hiddenFields.includes('subtasks') && task.subtasks.length > 0 && (
           <span className="rounded-full bg-gray-100 px-1.5 py-0.5 text-gray-600 dark:bg-gray-800 dark:text-gray-300">
             {doneSubtasks}/{task.subtasks.length}
           </span>
         )}
-        {task.dueDate && (
+        {!hiddenFields.includes('dueDate') && task.dueDate && (
           <span className="rounded-full bg-gray-100 px-1.5 py-0.5 text-gray-600 dark:bg-gray-800 dark:text-gray-300">
             {formatDate(task.dueDate, dateFormat)}
           </span>
         )}
-        {task.urgency === 'high' && (
+        {!hiddenFields.includes('urgency') && task.urgency === 'high' && (
           <span
             className="rounded-full px-1.5 py-0.5 font-semibold"
             style={{ backgroundColor: `${highTagColor}33`, color: highTagColor }}
@@ -96,7 +97,7 @@ export function TaskCardMini({ task, onClick, selectMode, selected, onToggleSele
             U
           </span>
         )}
-        {task.importance === 'high' && (
+        {!hiddenFields.includes('importance') && task.importance === 'high' && (
           <span
             className="rounded-full px-1.5 py-0.5 font-semibold"
             style={{ backgroundColor: `${highTagColor}33`, color: highTagColor }}
@@ -105,7 +106,7 @@ export function TaskCardMini({ task, onClick, selectMode, selected, onToggleSele
           </span>
         )}
       </div>
-      {showDescriptionOnCard && task.description.trim() && (
+      {!hiddenFields.includes('description') && showDescriptionOnCard && task.description.trim() && (
         <p className="line-clamp-3 text-xs text-gray-500 dark:text-gray-400">{task.description}</p>
       )}
       {timeTrackingEnabled &&

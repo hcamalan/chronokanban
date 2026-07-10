@@ -15,6 +15,7 @@ function defaultPreferences(): Preferences {
     showDescriptionOnCard: false,
     notificationsEnabled: false,
     timeTrackingEnabled: true,
+    hiddenFields: [],
   }
 }
 

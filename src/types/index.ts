@@ -14,6 +14,7 @@ export interface Preferences {
   showDescriptionOnCard: boolean
   notificationsEnabled: boolean
   timeTrackingEnabled: boolean
+  hiddenFields: string[]
 }
 
 export interface Category {
