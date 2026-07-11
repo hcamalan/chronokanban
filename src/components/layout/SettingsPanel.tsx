@@ -233,8 +233,8 @@ export function SettingsPanel({ onDataDeleted }: SettingsPanelProps) {
             </button>
           </div>
 
-          {isAutoSyncSupported && (
-            <div className="mt-3 border-t border-gray-200 pt-3 dark:border-gray-700">
+          <div className="mt-3 border-t border-gray-200 pt-3 dark:border-gray-700">
+            {isAutoSyncSupported ? (
               <button
                 onClick={() => {
                   setOpen(false)
@@ -245,8 +245,15 @@ export function SettingsPanel({ onDataDeleted }: SettingsPanelProps) {
               >
                 Auto-sync folder…
               </button>
-            </div>
-          )}
+            ) : (
+              <span
+                title="Needs a Chromium browser's File System Access support — not available in Firefox, Safari, or Brave (which disables it by default for privacy reasons)."
+                className="block w-full cursor-not-allowed rounded px-1 py-1 text-left text-sm text-gray-400 dark:text-gray-500"
+              >
+                Auto-sync folder… (not supported in this browser)
+              </span>
+            )}
+          </div>
 
           <div className="mt-3 border-t border-gray-200 pt-3 dark:border-gray-700">
             <button
