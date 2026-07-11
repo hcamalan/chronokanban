@@ -217,7 +217,16 @@ export function BoardDetailView({ boardId, onBack, onOpenTask }: BoardDetailView
             </h1>
           )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {isDesktop && (
+            <input
+              id="task-search-input"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search tasks... (press /)"
+              className="w-56 rounded border border-gray-300 px-2 py-1 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+            />
+          )}
           <button
             onClick={() => {
               setSelectMode((v) => !v)
@@ -252,46 +261,34 @@ export function BoardDetailView({ boardId, onBack, onOpenTask }: BoardDetailView
         </div>
       </div>
 
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <input
-          id="task-search-input"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search tasks... (press /)"
-          className="w-64 rounded border border-gray-300 px-2 py-1 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-        />
-        {selectMode && selectedTaskIds.size > 0 && (
-          <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-            <span>{selectedTaskIds.size} selected</span>
-            <select
-              value=""
-              onChange={(e) => {
-                if (e.target.value) handleBulkMove(e.target.value)
-              }}
-              className="rounded border border-gray-300 px-2 py-1 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-            >
-              <option value="">Move to...</option>
-              {buckets.map((b) => (
-                <option key={b.id} value={b.id}>
-                  {b.name}
-                </option>
-              ))}
-            </select>
-            <button
-              onClick={handleBulkComplete}
-              className="rounded px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-800"
-            >
-              Complete
-            </button>
-            <button
-              onClick={handleBulkDelete}
-              className="rounded px-2 py-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-950"
-            >
-              Delete
-            </button>
-          </div>
-        )}
-      </div>
+      {selectMode && selectedTaskIds.size > 0 && (
+        <div className="mb-4 flex flex-wrap items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+          <span>{selectedTaskIds.size} selected</span>
+          <select
+            value=""
+            onChange={(e) => {
+              if (e.target.value) handleBulkMove(e.target.value)
+            }}
+            className="rounded border border-gray-300 px-2 py-1 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+          >
+            <option value="">Move to...</option>
+            {buckets.map((b) => (
+              <option key={b.id} value={b.id}>
+                {b.name}
+              </option>
+            ))}
+          </select>
+          <button onClick={handleBulkComplete} className="rounded px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-800">
+            Complete
+          </button>
+          <button
+            onClick={handleBulkDelete}
+            className="rounded px-2 py-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-950"
+          >
+            Delete
+          </button>
+        </div>
+      )}
 
       <DndContext
         sensors={sensors}
