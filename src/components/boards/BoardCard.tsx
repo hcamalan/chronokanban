@@ -15,7 +15,21 @@ export function BoardCard({ board, taskCount, onOpen, onRename, onDeleteRequest,
   const [name, setName] = useState(board.name)
 
   return (
-    <div className="group relative flex h-28 flex-col justify-between rounded-lg border border-gray-200 bg-white p-4 shadow-sm hover:shadow-md dark:border-gray-700 dark:bg-gray-800">
+    <div
+      role="button"
+      tabIndex={0}
+      aria-label={`Open board ${board.name}`}
+      onClick={() => {
+        if (!editing) onOpen()
+      }}
+      onKeyDown={(e) => {
+        if (!editing && (e.key === 'Enter' || e.key === ' ')) {
+          e.preventDefault()
+          onOpen()
+        }
+      }}
+      className="group relative flex h-28 cursor-pointer flex-col justify-between rounded-lg border border-gray-200 bg-white p-4 shadow-sm hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
+    >
       {editing ? (
         <input
           autoFocus
@@ -29,16 +43,19 @@ export function BoardCard({ board, taskCount, onOpen, onRename, onDeleteRequest,
           onKeyDown={(e) => {
             if (e.key === 'Enter') e.currentTarget.blur()
           }}
+          onClick={(e) => e.stopPropagation()}
           className="w-full rounded border border-gray-300 px-1 text-lg font-medium outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
         />
       ) : (
-        <button
-          className="text-left text-lg font-medium text-gray-900 hover:underline dark:text-gray-100"
-          onClick={onOpen}
-          onDoubleClick={() => setEditing(true)}
+        <span
+          className="break-words text-left text-lg font-medium text-gray-900 dark:text-gray-100"
+          onDoubleClick={(e) => {
+            e.stopPropagation()
+            setEditing(true)
+          }}
         >
           {board.name}
-        </button>
+        </span>
       )}
       <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
         <span>
@@ -46,7 +63,10 @@ export function BoardCard({ board, taskCount, onOpen, onRename, onDeleteRequest,
         </span>
         <div className="flex items-center gap-3">
           <button
-            onClick={onDuplicate}
+            onClick={(e) => {
+              e.stopPropagation()
+              onDuplicate()
+            }}
             title="Duplicate board"
             aria-label={`Duplicate board ${board.name}`}
             className="text-gray-400 hover:text-gray-700 dark:text-gray-500 dark:hover:text-gray-200"
@@ -57,7 +77,10 @@ export function BoardCard({ board, taskCount, onOpen, onRename, onDeleteRequest,
             </svg>
           </button>
           <button
-            onClick={onDeleteRequest}
+            onClick={(e) => {
+              e.stopPropagation()
+              onDeleteRequest()
+            }}
             title="Delete board"
             aria-label={`Delete board ${board.name}`}
             className="text-gray-400 hover:text-red-500 dark:text-gray-500"

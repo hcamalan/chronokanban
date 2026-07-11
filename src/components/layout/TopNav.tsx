@@ -30,6 +30,13 @@ export function TopNav({ activeTab, onNavigate, hotkeysOpen, onHotkeysOpenChange
         : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
     }`
 
+  const iconTabClass = (tab: 'boards' | 'today' | 'dashboard') =>
+    `rounded px-2.5 py-1.5 ${
+      activeTab === tab
+        ? 'bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900'
+        : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
+    }`
+
   return (
     <header className="flex items-center justify-between border-b border-gray-200 bg-white px-6 py-3 dark:border-gray-700 dark:bg-gray-900">
       <div className="flex items-center gap-4">
@@ -39,7 +46,9 @@ export function TopNav({ activeTab, onNavigate, hotkeysOpen, onHotkeysOpenChange
           aria-label="Go to boards"
         >
           <img src="./logo.svg" alt="" className="h-7 w-7" />
-          <span className="text-lg font-semibold text-gray-900 dark:text-gray-100">ChronoKanban</span>
+          <span className="hidden text-lg font-semibold text-gray-900 dark:text-gray-100 md:inline">
+            ChronoKanban
+          </span>
         </button>
         <nav className="hidden items-center gap-1 md:flex">
           <button onClick={() => onNavigate('boards')} className={tabClass('boards')}>
@@ -72,6 +81,32 @@ export function TopNav({ activeTab, onNavigate, hotkeysOpen, onHotkeysOpenChange
           <HotkeysPanel open={hotkeysOpen} onOpenChange={onHotkeysOpenChange} />
         </div>
 
+        {/* Mobile icon nav */}
+        <div className="flex items-center gap-1 md:hidden">
+          <button onClick={() => onNavigate('boards')} aria-label="Boards" className={iconTabClass('boards')}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <rect x="3" y="4" width="5" height="16" rx="1" />
+              <rect x="10" y="4" width="5" height="10" rx="1" />
+              <rect x="17" y="4" width="5" height="13" rx="1" />
+            </svg>
+          </button>
+          <button onClick={() => onNavigate('dashboard')} aria-label="Dashboard" className={iconTabClass('dashboard')}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <line x1="4" y1="20" x2="4" y2="10" />
+              <line x1="12" y1="20" x2="12" y2="4" />
+              <line x1="20" y1="20" x2="20" y2="14" />
+            </svg>
+          </button>
+          <button onClick={() => onNavigate('today')} aria-label="Today" className={iconTabClass('today')}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <rect x="3" y="4" width="18" height="18" rx="2" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="3" y1="10" x2="21" y2="10" />
+            </svg>
+          </button>
+        </div>
+
         {/* Settings stays visible at every width */}
         <SettingsPanel onDataDeleted={() => onNavigate('boards')} />
 
@@ -87,23 +122,6 @@ export function TopNav({ activeTab, onNavigate, hotkeysOpen, onHotkeysOpenChange
           </button>
           {menuOpen && (
             <div className="absolute right-0 z-30 mt-1 flex w-56 flex-col rounded border border-gray-200 bg-white p-1 shadow-lg dark:border-gray-700 dark:bg-gray-800">
-              {(['boards', 'dashboard', 'today'] as const).map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => {
-                    onNavigate(tab)
-                    setMenuOpen(false)
-                  }}
-                  className={`rounded px-3 py-2 text-left text-sm font-medium ${
-                    activeTab === tab
-                      ? 'bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900'
-                      : 'text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700'
-                  }`}
-                >
-                  {tab === 'boards' ? 'Boards' : tab === 'dashboard' ? 'Dashboard' : 'Today'}
-                </button>
-              ))}
-              <div className="my-1 border-t border-gray-200 dark:border-gray-700" />
               <a
                 href="https://paypal.me/HuseyinCamalan"
                 target="_blank"

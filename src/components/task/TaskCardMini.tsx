@@ -63,7 +63,7 @@ export function TaskCardMini({ task, onClick, selectMode, selected, onToggleSele
           />
         )}
         <span
-          className={`text-sm font-medium text-gray-900 dark:text-gray-100 ${
+          className={`break-words text-sm font-medium text-gray-900 dark:text-gray-100 ${
             isCompleted ? 'text-gray-400 line-through dark:text-gray-500' : ''
           }`}
         >

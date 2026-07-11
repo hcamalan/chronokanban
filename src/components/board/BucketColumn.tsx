@@ -95,51 +95,66 @@ export function BucketColumn({
       }`}
     >
       <div className="mb-2 flex items-center justify-between gap-2">
-        <div className="flex min-w-0 flex-1 items-center gap-1.5">
-          {editingName ? (
-            <input
-              autoFocus
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              onBlur={() => {
-                setEditingName(false)
-                if (name.trim()) renameBucket(bucket.id, name.trim())
-                else setName(bucket.name)
-              }}
-              onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
-              className="w-full rounded border border-gray-300 px-1 text-sm font-medium outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
-            />
-          ) : collapsed ? (
+        {editingName ? (
+          <input
+            autoFocus
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            onBlur={() => {
+              setEditingName(false)
+              if (name.trim()) renameBucket(bucket.id, name.trim())
+              else setName(bucket.name)
+            }}
+            onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
+            className="w-full rounded border border-gray-300 px-1 text-sm font-medium outline-none dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
+          />
+        ) : (
+          <div
+            onClick={collapsed || !isDesktop ? onToggleCollapsed : undefined}
+            className="flex min-w-0 flex-1 items-center gap-1.5 py-0.5"
+          >
+            {collapsed ? (
+              <>
+                <span className="truncate text-sm font-medium text-gray-700 dark:text-gray-200">{bucket.name}</span>
+                {taskCount > 0 && (
+                  <span className="flex-shrink-0 rounded-full bg-gray-200 px-1.5 text-xs text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+                    {taskCount}
+                  </span>
+                )}
+              </>
+            ) : (
+              <h2
+                className="truncate text-sm font-medium text-gray-700 dark:text-gray-200"
+                onDoubleClick={() => setEditingName(true)}
+              >
+                {bucket.name}
+              </h2>
+            )}
             <button
-              onClick={onToggleCollapsed}
-              aria-label={`Expand bucket ${bucket.name}`}
-              className="flex min-w-0 flex-1 items-center gap-1.5 py-0.5 text-left"
+              onClick={(e) => {
+                e.stopPropagation()
+                onToggleCollapsed()
+              }}
+              aria-label={collapsed ? `Expand bucket ${bucket.name}` : `Minimize bucket ${bucket.name}`}
+              title={collapsed ? 'Expand' : 'Minimize'}
+              className="flex-shrink-0 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
             >
-              <span className="truncate text-sm font-medium text-gray-700 dark:text-gray-200">{bucket.name}</span>
-              {taskCount > 0 && (
-                <span className="flex-shrink-0 rounded-full bg-gray-200 px-1.5 text-xs text-gray-600 dark:bg-gray-700 dark:text-gray-300">
-                  {taskCount}
-                </span>
-              )}
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                {collapsed ? <path d="m9 18 6-6-6-6" /> : <path d="m6 9 6 6 6-6" />}
+              </svg>
             </button>
-          ) : (
-            <h2
-              className="truncate text-sm font-medium text-gray-700 dark:text-gray-200"
-              onDoubleClick={() => setEditingName(true)}
-            >
-              {bucket.name}
-            </h2>
-          )}
-        </div>
+          </div>
+        )}
         <div className="flex flex-shrink-0 items-center gap-3">
           <button
-            onClick={onToggleCollapsed}
-            aria-label={collapsed ? `Expand bucket ${bucket.name}` : `Minimize bucket ${bucket.name}`}
-            title={collapsed ? 'Expand' : 'Minimize'}
+            onClick={() => setEditingName(true)}
+            aria-label={`Rename bucket ${bucket.name}`}
+            title="Rename"
             className="text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              {collapsed ? <path d="m9 18 6-6-6-6" /> : <path d="m6 9 6 6 6-6" />}
+              <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+              <path d="m15 5 4 4" />
             </svg>
           </button>
           <button

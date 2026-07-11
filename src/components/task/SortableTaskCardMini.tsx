@@ -24,6 +24,7 @@ export function SortableTaskCardMini({
 }: SortableTaskCardMiniProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: task.id,
+    disabled: !!selectMode,
   })
   const deleteTasksWithUndo = useStore((s) => s.deleteTasksWithUndo)
   const [confirming, setConfirming] = useState(false)
