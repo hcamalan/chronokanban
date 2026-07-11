@@ -14,6 +14,7 @@ import {
 import { useStore } from '../../store/useStore'
 import { MultiSelectDropdown } from './MultiSelectDropdown'
 import { DownloadImageButton } from './DownloadImageButton'
+import { CollapseChevron } from './CollapseChevron'
 import {
   buildChartData,
   GROUP_BY_OPTIONS,
@@ -40,6 +41,9 @@ const selectClass =
 
 export function ConfigurableChart({ tasks, categories, categoryEnabled }: ConfigurableChartProps) {
   const colorMode = useStore((s) => s.preferences.colorMode)
+  const collapsedSections = useStore((s) => s.preferences.collapsedDashboardSections)
+  const setPreference = useStore((s) => s.setPreference)
+  const collapsed = collapsedSections.includes('chart')
   const cardRef = useRef<HTMLDivElement>(null)
   const [chartType, setChartType] = useState<'bar' | 'pie'>('bar')
   const [config, setConfig] = useState<ChartConfig>({
@@ -82,125 +86,141 @@ export function ConfigurableChart({ tasks, categories, categoryEnabled }: Config
   const update = <K extends keyof ChartConfig>(key: K, value: ChartConfig[K]) =>
     setConfig((c) => ({ ...c, [key]: value }))
 
+  function toggleCollapsed() {
+    setPreference(
+      'collapsedDashboardSections',
+      collapsed ? collapsedSections.filter((k) => k !== 'chart') : [...collapsedSections, 'chart'],
+    )
+  }
+
   return (
     <div
       ref={cardRef}
       className="relative rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900"
     >
-      <div className="mb-3 flex flex-wrap items-center gap-2">
-        <label className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-300">
-          Measure
-          <select
-            value={config.unit}
-            onChange={(e) => update('unit', e.target.value as Unit)}
-            className={selectClass}
-          >
-            {UNIT_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-300">
-          Group by
-          <select
-            value={config.groupBy}
-            onChange={(e) => update('groupBy', e.target.value as GroupByDim)}
-            className={selectClass}
-          >
-            {groupByOptions.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <MultiSelectDropdown
-          label="Status"
-          options={STATUS_OPTIONS}
-          selected={config.statuses}
-          onChange={(v) => update('statuses', v as TaskStatus[])}
-        />
-        {categoryEnabled && (
-          <MultiSelectDropdown
-            label="Category"
-            options={categoryFilterOptions}
-            selected={config.categoryIds}
-            onChange={(v) => update('categoryIds', v)}
-          />
-        )}
-        <MultiSelectDropdown
-          label="Importance"
-          options={LEVEL_FILTER_OPTIONS}
-          selected={config.importances}
-          onChange={(v) => update('importances', v as ChartConfig['importances'])}
-        />
-        <MultiSelectDropdown
-          label="Urgency"
-          options={LEVEL_FILTER_OPTIONS}
-          selected={config.urgencies}
-          onChange={(v) => update('urgencies', v as ChartConfig['urgencies'])}
-        />
-        <MultiSelectDropdown
-          label="Late"
-          options={LATE_OPTIONS}
-          selected={config.lateness}
-          onChange={(v) => update('lateness', v as ('late' | 'not-late')[])}
-        />
-
-        <div className="ml-auto flex overflow-hidden rounded border border-gray-300 dark:border-gray-600">
-          {(['bar', 'pie'] as const).map((type) => (
-            <button
-              key={type}
-              onClick={() => setChartType(type)}
-              className={`px-3 py-1 text-sm capitalize ${
-                chartType === type
-                  ? 'bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900'
-                  : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
-              }`}
-            >
-              {type}
-            </button>
-          ))}
-        </div>
+      <div className={`flex items-center gap-2 ${collapsed ? '' : 'mb-3'}`}>
+        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Chart</h3>
+        <CollapseChevron collapsed={collapsed} onClick={toggleCollapsed} label="chart" />
       </div>
 
-      <h3 className="mb-2 text-sm font-medium text-gray-500 dark:text-gray-400">
-        {unitLabel} by {groupByLabel}
-      </h3>
+      {!collapsed && (
+        <>
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            <label className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-300">
+              Measure
+              <select
+                value={config.unit}
+                onChange={(e) => update('unit', e.target.value as Unit)}
+                className={selectClass}
+              >
+                {UNIT_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-300">
+              Group by
+              <select
+                value={config.groupBy}
+                onChange={(e) => update('groupBy', e.target.value as GroupByDim)}
+                className={selectClass}
+              >
+                {groupByOptions.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-      {data.length === 0 ? (
-        <p className="py-12 text-center text-sm text-gray-400">No data for this selection</p>
-      ) : chartType === 'bar' ? (
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={data}>
-            <XAxis dataKey="label" tick={{ fontSize: 12 }} />
-            <YAxis tick={{ fontSize: 12 }} allowDecimals={config.unit !== 'count'} />
-            <Tooltip formatter={(value) => [value, unitLabel]} />
-            <Bar dataKey="value" isAnimationActive={false}>
-              {data.map((d) => (
-                <Cell key={d.key} fill={d.color} />
+            <MultiSelectDropdown
+              label="Status"
+              options={STATUS_OPTIONS}
+              selected={config.statuses}
+              onChange={(v) => update('statuses', v as TaskStatus[])}
+            />
+            {categoryEnabled && (
+              <MultiSelectDropdown
+                label="Category"
+                options={categoryFilterOptions}
+                selected={config.categoryIds}
+                onChange={(v) => update('categoryIds', v)}
+              />
+            )}
+            <MultiSelectDropdown
+              label="Importance"
+              options={LEVEL_FILTER_OPTIONS}
+              selected={config.importances}
+              onChange={(v) => update('importances', v as ChartConfig['importances'])}
+            />
+            <MultiSelectDropdown
+              label="Urgency"
+              options={LEVEL_FILTER_OPTIONS}
+              selected={config.urgencies}
+              onChange={(v) => update('urgencies', v as ChartConfig['urgencies'])}
+            />
+            <MultiSelectDropdown
+              label="Late"
+              options={LATE_OPTIONS}
+              selected={config.lateness}
+              onChange={(v) => update('lateness', v as ('late' | 'not-late')[])}
+            />
+
+            <div className="ml-auto flex overflow-hidden rounded border border-gray-300 dark:border-gray-600">
+              {(['bar', 'pie'] as const).map((type) => (
+                <button
+                  key={type}
+                  onClick={() => setChartType(type)}
+                  className={`px-3 py-1 text-sm capitalize ${
+                    chartType === type
+                      ? 'bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900'
+                      : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800'
+                  }`}
+                >
+                  {type}
+                </button>
               ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      ) : (
-        <ResponsiveContainer width="100%" height={300}>
-          <PieChart>
-            <Pie data={data} dataKey="value" nameKey="label" outerRadius={100} label isAnimationActive={false}>
-              {data.map((d) => (
-                <Cell key={d.key} fill={d.color} />
-              ))}
-            </Pie>
-            <Tooltip formatter={(value) => [value, unitLabel]} />
-            <Legend />
-          </PieChart>
-        </ResponsiveContainer>
+            </div>
+          </div>
+
+          <h3 className="mb-2 text-sm font-medium text-gray-500 dark:text-gray-400">
+            {unitLabel} by {groupByLabel}
+          </h3>
+
+          {data.length === 0 ? (
+            <p className="py-12 text-center text-sm text-gray-400">No data for this selection</p>
+          ) : chartType === 'bar' ? (
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={data}>
+                <XAxis dataKey="label" tick={{ fontSize: 12 }} />
+                <YAxis tick={{ fontSize: 12 }} allowDecimals={config.unit !== 'count'} />
+                <Tooltip formatter={(value) => [value, unitLabel]} />
+                <Bar dataKey="value" isAnimationActive={false}>
+                  {data.map((d) => (
+                    <Cell key={d.key} fill={d.color} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie data={data} dataKey="value" nameKey="label" outerRadius={100} label isAnimationActive={false}>
+                  {data.map((d) => (
+                    <Cell key={d.key} fill={d.color} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(value) => [value, unitLabel]} />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
+
+          <DownloadImageButton targetRef={cardRef} filename="chronokanban-chart.png" />
+        </>
       )}
-
-      <DownloadImageButton targetRef={cardRef} filename="chronokanban-chart.png" />
     </div>
   )
 }

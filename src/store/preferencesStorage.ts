@@ -16,6 +16,7 @@ function defaultPreferences(): Preferences {
     notificationsEnabled: false,
     timeTrackingEnabled: true,
     hiddenFields: [],
+    collapsedDashboardSections: [],
   }
 }
 

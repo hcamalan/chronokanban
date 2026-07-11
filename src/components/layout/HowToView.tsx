@@ -198,13 +198,16 @@ export function HowToView() {
             Choose what to <strong>measure</strong> (number of tasks, time spent, or story points), what to{' '}
             <strong>group by</strong> (category, status, importance, urgency, or late), and which tasks to include
             via the filter dropdowns - then view it as a bar or pie chart. Pick a specific board to break down by
-            category; grouping by status/urgency/importance/late also works across all boards combined.
+            category; grouping by status/urgency/importance/late also works across all boards combined. Click the
+            chevron next to <strong>Chart</strong> to minimize it if you don't need it visible - it stays
+            minimized the next time you open the Dashboard, until you expand it again.
           </p>
         </SubChapter>
         <SubChapter title="Calendar view">
           <p>
             Switch to day, 3-day, week, or month view to see bars for what you worked on, what's due, and what's
-            overdue, laid out on a real calendar.
+            overdue, laid out on a real calendar. Like the chart, it can be minimized with the chevron next to{' '}
+            <strong>Calendar</strong>, and stays that way until you expand it again.
           </p>
         </SubChapter>
         <SubChapter title="Exporting">

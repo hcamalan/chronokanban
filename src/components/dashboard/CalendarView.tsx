@@ -4,6 +4,7 @@ import { useStore } from '../../store/useStore'
 import { MultiSelectDropdown } from './MultiSelectDropdown'
 import { SortByDropdown, type SortDirection } from './SortByDropdown'
 import { DownloadImageButton } from './DownloadImageButton'
+import { CollapseChevron } from './CollapseChevron'
 import { CalendarDayCell, type WorkedOnBar, type DueBar } from './CalendarDayCell'
 import { buildDailyWorkSummary, type WorkInterval, type DailyWorkSummary } from '../../db/activityLog'
 import { isLate } from '../../utils/time'
@@ -44,6 +45,9 @@ export function CalendarView({ tasks, onOpenTask }: CalendarViewProps) {
   const allTasks = useStore((s) => s.tasks)
   const categories = useStore(useShallow((s) => s.categories))
   const colorMode = useStore((s) => s.preferences.colorMode)
+  const collapsedSections = useStore((s) => s.preferences.collapsedDashboardSections)
+  const setPreference = useStore((s) => s.setPreference)
+  const collapsed = collapsedSections.includes('calendar')
 
   const [viewMode, setViewMode] = useState<CalendarViewMode>('week')
   const [anchorDateKey, setAnchorDateKey] = useState(todayDateKey())
@@ -162,6 +166,13 @@ export function CalendarView({ tasks, onOpenTask }: CalendarViewProps) {
     setAnchorDateKey(dateKey)
   }
 
+  function toggleCollapsed() {
+    setPreference(
+      'collapsedDashboardSections',
+      collapsed ? collapsedSections.filter((k) => k !== 'calendar') : [...collapsedSections, 'calendar'],
+    )
+  }
+
   const gridColsClass = viewMode === 'day' ? 'grid-cols-1' : viewMode === '3day' ? 'grid-cols-3' : 'grid-cols-7'
   // On narrow screens, keep multi-column layouts legible by giving the grid a floor width and letting
   // the calendar scroll sideways instead of squishing each day cell. Desktop is unaffected.
@@ -170,83 +181,92 @@ export function CalendarView({ tasks, onOpenTask }: CalendarViewProps) {
 
   return (
     <div ref={cardRef} className="relative rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Calendar</h3>
-        <div className="flex flex-wrap items-center gap-2">
-          <select
-            value={viewMode}
-            onChange={(e) => setViewMode(e.target.value as CalendarViewMode)}
-            className={selectClass}
-          >
-            {CALENDAR_VIEW_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-          <MultiSelectDropdown
-            label="Show"
-            options={FILTER_OPTIONS}
-            selected={filters}
-            onChange={setFilters}
-            emptyLabel="None"
-          />
-          <SortByDropdown
-            label="Sort by"
-            options={SORT_OPTIONS}
-            field={sortField}
-            direction={sortDirection}
-            onSelect={handleSortSelect}
-            onToggleDirection={handleSortToggle}
-          />
+      <div className={`flex flex-wrap items-center justify-between gap-2 ${collapsed ? '' : 'mb-3'}`}>
+        <div className="flex items-center gap-2">
+          <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Calendar</h3>
+          <CollapseChevron collapsed={collapsed} onClick={toggleCollapsed} label="calendar" />
         </div>
-      </div>
-
-      <div className="mb-3 flex items-center justify-between gap-2">
-        <div className="flex overflow-hidden rounded border border-gray-300 dark:border-gray-600">
-          <button
-            onClick={() => setAnchorDateKey(shiftAnchor(viewMode, anchorDateKey, -1))}
-            aria-label="Previous"
-            className="border-r border-gray-300 px-2 py-1 text-gray-600 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
-          >
-            ←
-          </button>
-          <button
-            onClick={() => setAnchorDateKey(todayDateKey())}
-            className="border-r border-gray-300 px-2 py-1 text-xs text-gray-600 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
-          >
-            Jump to today
-          </button>
-          <button
-            onClick={() => setAnchorDateKey(shiftAnchor(viewMode, anchorDateKey, 1))}
-            aria-label="Next"
-            className="px-2 py-1 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
-          >
-            →
-          </button>
-        </div>
-        <span className="text-sm font-medium text-gray-700 dark:text-gray-200">{rangeLabel}</span>
-      </div>
-
-      <div className="overflow-x-auto">
-        <div className={`grid gap-2 ${gridColsClass} ${gridMinWidthClass}`}>
-          {visibleDates.map(({ dateKey, inCurrentPeriod }) => (
-            <CalendarDayCell
-              key={dateKey}
-              dateKey={dateKey}
-              inCurrentPeriod={inCurrentPeriod}
-              isMonthView={isMonthView}
-              workedOn={workedOnBarsFor(dateKey)}
-              due={dueBarsFor(dateKey)}
-              lateColor={lateColor}
-              onOpenTask={onOpenTask}
-              onShowMore={handleShowMore}
+        {!collapsed && (
+          <div className="flex flex-wrap items-center gap-2">
+            <select
+              value={viewMode}
+              onChange={(e) => setViewMode(e.target.value as CalendarViewMode)}
+              className={selectClass}
+            >
+              {CALENDAR_VIEW_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+            <MultiSelectDropdown
+              label="Show"
+              options={FILTER_OPTIONS}
+              selected={filters}
+              onChange={setFilters}
+              emptyLabel="None"
             />
-          ))}
-        </div>
+            <SortByDropdown
+              label="Sort by"
+              options={SORT_OPTIONS}
+              field={sortField}
+              direction={sortDirection}
+              onSelect={handleSortSelect}
+              onToggleDirection={handleSortToggle}
+            />
+          </div>
+        )}
       </div>
 
-      <DownloadImageButton targetRef={cardRef} filename="chronokanban-calendar.png" />
+      {!collapsed && (
+        <>
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <div className="flex overflow-hidden rounded border border-gray-300 dark:border-gray-600">
+              <button
+                onClick={() => setAnchorDateKey(shiftAnchor(viewMode, anchorDateKey, -1))}
+                aria-label="Previous"
+                className="border-r border-gray-300 px-2 py-1 text-gray-600 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+              >
+                ←
+              </button>
+              <button
+                onClick={() => setAnchorDateKey(todayDateKey())}
+                className="border-r border-gray-300 px-2 py-1 text-xs text-gray-600 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+              >
+                Jump to today
+              </button>
+              <button
+                onClick={() => setAnchorDateKey(shiftAnchor(viewMode, anchorDateKey, 1))}
+                aria-label="Next"
+                className="px-2 py-1 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+              >
+                →
+              </button>
+            </div>
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-200">{rangeLabel}</span>
+          </div>
+
+          <div className="overflow-x-auto">
+            <div className={`grid gap-2 ${gridColsClass} ${gridMinWidthClass}`}>
+              {visibleDates.map(({ dateKey, inCurrentPeriod }) => (
+                <CalendarDayCell
+                  key={dateKey}
+                  dateKey={dateKey}
+                  inCurrentPeriod={inCurrentPeriod}
+                  isMonthView={isMonthView}
+                  workedOn={workedOnBarsFor(dateKey)}
+                  due={dueBarsFor(dateKey)}
+                  lateColor={lateColor}
+                  onOpenTask={onOpenTask}
+                  onShowMore={handleShowMore}
+                />
+              ))}
+            </div>
+          </div>
+
+          <DownloadImageButton targetRef={cardRef} filename="chronokanban-calendar.png" />
+        </>
+      )}
     </div>
   )
 }

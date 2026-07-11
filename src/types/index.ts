@@ -15,6 +15,7 @@ export interface Preferences {
   notificationsEnabled: boolean
   timeTrackingEnabled: boolean
   hiddenFields: string[]
+  collapsedDashboardSections: string[]
 }
 
 export interface Category {
