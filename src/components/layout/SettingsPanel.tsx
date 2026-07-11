@@ -250,7 +250,7 @@ export function SettingsPanel({ onDataDeleted }: SettingsPanelProps) {
                 title="Needs a Chromium browser's File System Access support — not available in Firefox, Safari, or Brave (which disables it by default for privacy reasons)."
                 className="block w-full cursor-not-allowed rounded px-1 py-1 text-left text-sm text-gray-400 dark:text-gray-500"
               >
-                Auto-sync folder… (not supported in this browser)
+                Auto-sync folder…
               </span>
             )}
           </div>
