@@ -246,6 +246,16 @@ export function HowToView() {
           replaces everything currently in the app, so use it carefully.
         </p>
         <p>
+          For a more hands-off option, <strong>Settings → Auto-sync folder</strong> lets you pick a folder once
+          and keeps a file there automatically up to date - pushed a few seconds after each change, and pulled
+          back in when you open the app if the file there is newer than what this browser last saw (so opening
+          ChronoKanban elsewhere pointed at the same folder picks up your latest data). It's a straight
+          newest-wins swap, not a merge, so it's meant for one person using a couple of devices one at a time
+          rather than editing in two places at once. It's only available in Chromium-based browsers (Chrome,
+          Edge, Brave, Opera - not Firefox or Safari), and fully closing and reopening the browser may need one
+          "Reconnect" click before it resumes.
+        </p>
+        <p>
           The first time you use ChronoKanban, a one-time banner also nudges you to back up early - export once
           or dismiss it and it won't show again.
         </p>
