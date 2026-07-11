@@ -161,9 +161,10 @@ export function HowToView() {
         </SubChapter>
         <SubChapter title="Search & bulk actions">
           <p>
-            Press <strong>/</strong> or use the search box on a board to filter its tasks instantly. Click{' '}
-            <strong>Select</strong> to check off multiple tasks at once and move, complete, or delete them
-            together.
+            On desktop, press <strong>/</strong> or use the search box next to <strong>Select</strong> to filter
+            a board's tasks instantly (not shown on mobile, where a board's task list is usually short enough not
+            to need it). Click <strong>Select</strong> to check off multiple tasks at once and move, complete, or
+            delete them together - available on both desktop and mobile.
           </p>
         </SubChapter>
       </Chapter>
