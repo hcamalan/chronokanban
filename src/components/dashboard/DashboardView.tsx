@@ -6,6 +6,7 @@ import { ConfigurableChart } from './ConfigurableChart'
 import { LateTasksList } from './LateTasksList'
 import { EffectivenessTiles } from './EffectivenessTiles'
 import { CalendarView } from './CalendarView'
+import { CollapseChevron } from './CollapseChevron'
 
 interface DashboardViewProps {
   onOpenTask: (taskId: string) => void
@@ -16,9 +17,23 @@ export function DashboardView({ onOpenTask }: DashboardViewProps) {
   const tasks = useStore(useShallow((s) => Object.values(s.tasks)))
   const categories = useStore(useShallow((s) => Object.values(s.categories)))
   const downloadActivityLog = useStore((s) => s.downloadActivityLog)
+  const collapsedSections = useStore((s) => s.preferences.collapsedDashboardSections)
+  const setPreference = useStore((s) => s.setPreference)
 
   const scopedTasks = tasks.filter((t) => scope === 'all' || t.boardId === scope)
   const boardCategories = categories.filter((c) => c.boardId === scope)
+
+  function toggleSection(key: string) {
+    setPreference(
+      'collapsedDashboardSections',
+      collapsedSections.includes(key)
+        ? collapsedSections.filter((k) => k !== key)
+        : [...collapsedSections, key],
+    )
+  }
+
+  const metricsCollapsed = collapsedSections.includes('performanceMetrics')
+  const lateTasksCollapsed = collapsedSections.includes('lateTasks')
 
   return (
     <div className="mx-auto max-w-5xl p-4 sm:p-6">
@@ -35,8 +50,16 @@ export function DashboardView({ onOpenTask }: DashboardViewProps) {
         </div>
       </div>
 
-      <div className="mb-6">
-        <EffectivenessTiles tasks={scopedTasks} />
+      <div className="mb-6 rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
+        <div className={`flex items-center gap-2 ${metricsCollapsed ? '' : 'mb-3'}`}>
+          <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Performance metrics</h3>
+          <CollapseChevron
+            collapsed={metricsCollapsed}
+            onClick={() => toggleSection('performanceMetrics')}
+            label="performance metrics"
+          />
+        </div>
+        {!metricsCollapsed && <EffectivenessTiles tasks={scopedTasks} />}
       </div>
 
       <div className="mb-6">
@@ -44,8 +67,15 @@ export function DashboardView({ onOpenTask }: DashboardViewProps) {
       </div>
 
       <div className="mb-6 rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
-        <h3 className="mb-2 text-sm font-medium text-gray-500 dark:text-gray-400">Late tasks</h3>
-        <LateTasksList tasks={scopedTasks} onOpenTask={onOpenTask} />
+        <div className={`flex items-center gap-2 ${lateTasksCollapsed ? '' : 'mb-2'}`}>
+          <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Late tasks</h3>
+          <CollapseChevron
+            collapsed={lateTasksCollapsed}
+            onClick={() => toggleSection('lateTasks')}
+            label="late tasks"
+          />
+        </div>
+        {!lateTasksCollapsed && <LateTasksList tasks={scopedTasks} onOpenTask={onOpenTask} />}
       </div>
 
       <CalendarView tasks={scopedTasks} onOpenTask={onOpenTask} />

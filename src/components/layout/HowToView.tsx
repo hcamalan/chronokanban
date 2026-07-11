@@ -187,10 +187,11 @@ export function HowToView() {
       </Chapter>
 
       <Chapter title="Dashboard & Calendar">
-        <SubChapter title="Effectiveness tiles">
+        <SubChapter title="Performance metrics">
           <p>
             Three headline numbers: your on-time completion rate, story points completed per hour tracked, and how
-            your tracked time compares to your estimates.
+            your tracked time compares to your estimates. Minimize the whole group with the chevron next to{' '}
+            <strong>Performance metrics</strong> - it stays minimized across visits until you expand it again.
           </p>
         </SubChapter>
         <SubChapter title="Configurable chart">
@@ -208,6 +209,12 @@ export function HowToView() {
             Switch to day, 3-day, week, or month view to see bars for what you worked on, what's due, and what's
             overdue, laid out on a real calendar. Like the chart, it can be minimized with the chevron next to{' '}
             <strong>Calendar</strong>, and stays that way until you expand it again.
+          </p>
+        </SubChapter>
+        <SubChapter title="Late tasks">
+          <p>
+            A list of everything overdue across the boards in scope, also minimizable and persisted the same way
+            as the sections above.
           </p>
         </SubChapter>
         <SubChapter title="Exporting">
