@@ -4,6 +4,8 @@ import { DarkModeToggle } from './DarkModeToggle'
 import { ConfirmDialog } from '../boards/ConfirmDialog'
 import { ImportConflictDialog } from '../boards/ImportConflictDialog'
 import { FieldsPanel } from './FieldsPanel'
+import { AutoSyncPanel } from './AutoSyncPanel'
+import { isAutoSyncSupported } from '../../store/useAutoSyncStore'
 import { BUCKET_WIDTH_OPTIONS } from '../../utils/bucketWidth'
 import { requestNotificationPermission } from '../../utils/notifications'
 import {
@@ -46,6 +48,7 @@ export function SettingsPanel({ onDataDeleted }: SettingsPanelProps) {
   const [open, setOpen] = useState(false)
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [fieldsOpen, setFieldsOpen] = useState(false)
+  const [autoSyncOpen, setAutoSyncOpen] = useState(false)
   const [importFlow, setImportFlow] = useState<ImportFlow | null>(null)
   const ref = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -230,6 +233,21 @@ export function SettingsPanel({ onDataDeleted }: SettingsPanelProps) {
             </button>
           </div>
 
+          {isAutoSyncSupported && (
+            <div className="mt-3 border-t border-gray-200 pt-3 dark:border-gray-700">
+              <button
+                onClick={() => {
+                  setOpen(false)
+                  setAutoSyncOpen(true)
+                }}
+                title="Automatically keeps a file in a folder on your computer in sync with your data — so opening ChronoKanban elsewhere picks up your latest boards."
+                className="w-full rounded px-1 py-1 text-left text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
+              >
+                Auto-sync folder…
+              </button>
+            </div>
+          )}
+
           <div className="mt-3 border-t border-gray-200 pt-3 dark:border-gray-700">
             <button
               onClick={() => {
@@ -265,6 +283,8 @@ export function SettingsPanel({ onDataDeleted }: SettingsPanelProps) {
       />
 
       {fieldsOpen && <FieldsPanel onClose={() => setFieldsOpen(false)} />}
+
+      {autoSyncOpen && <AutoSyncPanel onClose={() => setAutoSyncOpen(false)} />}
 
       {confirmingDelete && (
         <ConfirmDialog

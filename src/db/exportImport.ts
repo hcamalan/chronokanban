@@ -1,5 +1,13 @@
 import { getDB } from './db'
-import { bulkPutAll, deleteBoardCascade, getAllBoards, getAllBuckets, getAllTasks, getAllCategories } from './repository'
+import {
+  bulkPutAll,
+  clearAllData,
+  deleteBoardCascade,
+  getAllBoards,
+  getAllBuckets,
+  getAllTasks,
+  getAllCategories,
+} from './repository'
 import type { Board, Bucket, TaskCard, Category, Attachment } from '../types'
 
 export interface ExportFile {
@@ -86,6 +94,33 @@ export async function parseImportFile(file: File): Promise<ExportFile> {
     throw new Error('Invalid export file format')
   }
   return data
+}
+
+/**
+ * Wipes all local data and replaces it with the given snapshot, as-is (no conflict resolution).
+ * Used for auto-sync's pull path, where the file is meant to be a deterministic mirror rather
+ * than an additive merge — unlike `mergeImportFile`, which is for one-off manual imports.
+ */
+export async function replaceAllDataWithSnapshot(data: ExportFile): Promise<void> {
+  const attachments: Attachment[] = await Promise.all(
+    data.attachments.map(async (a) => ({
+      id: a.id,
+      taskId: a.taskId,
+      fileName: a.fileName,
+      mimeType: a.mimeType,
+      size: a.size,
+      blob: await base64ToBlob(a.dataBase64),
+      createdAt: Date.now(),
+    })),
+  )
+  await clearAllData()
+  await bulkPutAll({
+    boards: data.boards,
+    buckets: data.buckets,
+    tasks: data.tasks,
+    categories: data.categories,
+    attachments,
+  })
 }
 
 export interface BoardConflict {

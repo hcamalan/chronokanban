@@ -12,10 +12,11 @@ export interface ChronoKanbanDB extends DBSchema {
   categories: { key: string; value: Category; indexes: { 'by-board': string } }
   attachments: { key: string; value: Attachment; indexes: { 'by-task': string } }
   activityLog: { key: string; value: ActivityLogEntry }
+  appSettings: { key: string; value: unknown }
 }
 
 const DB_NAME = 'chrono-kanban-db'
-const DB_VERSION = 2
+const DB_VERSION = 3
 
 let dbPromise: Promise<IDBPDatabase<ChronoKanbanDB>> | null = null
 
@@ -41,6 +42,9 @@ export function getDB() {
         }
         if (oldVersion < 2) {
           db.createObjectStore('activityLog', { keyPath: 'id' })
+        }
+        if (oldVersion < 3) {
+          db.createObjectStore('appSettings')
         }
       },
     })

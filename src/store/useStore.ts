@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import * as repo from '../db/repository'
-import { buildExportFile, downloadExportFile } from '../db/exportImport'
+import { buildExportFile, downloadExportFile, replaceAllDataWithSnapshot, type ExportFile } from '../db/exportImport'
 import { logActivity, downloadTimesheetCsv, purgeCurrentRunLog, type WorkInterval } from '../db/activityLog'
 import { createDebouncer } from './persist'
 import { loadPreferences, savePreferences } from './preferencesStorage'
@@ -72,6 +72,7 @@ interface AppState {
   exportData: () => Promise<void>
   downloadActivityLog: () => Promise<void>
   deleteAllData: () => Promise<void>
+  restoreFromSnapshot: (data: ExportFile) => Promise<void>
 }
 
 export const useStore = create<AppState>((set, get) => {
@@ -668,6 +669,13 @@ export const useStore = create<AppState>((set, get) => {
     // destructive action never leaves the app on a blank screen.
     const seeded = await seedExampleBoard()
     set({ ...seeded, pendingDeletion: null })
+  },
+  restoreFromSnapshot: async (data) => {
+    const pending = get().pendingDeletion
+    if (pending) clearTimeout(pending.timeoutId)
+    await replaceAllDataWithSnapshot(data)
+    set({ pendingDeletion: null })
+    await get().loadFromDB()
   },
   }
 })

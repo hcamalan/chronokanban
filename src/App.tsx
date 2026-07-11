@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useStore } from './store/useStore'
+import { useAutoSyncStore } from './store/useAutoSyncStore'
 import { useNotificationWatcher } from './hooks/useNotificationWatcher'
 import { ensureInitialGracePeriod } from './store/backupStorage'
 import { TopNav } from './components/layout/TopNav'
@@ -30,8 +31,11 @@ function App() {
   useNotificationWatcher()
 
   useEffect(() => {
-    loadFromDB()
-    ensureInitialGracePeriod()
+    ;(async () => {
+      await loadFromDB()
+      ensureInitialGracePeriod()
+      await useAutoSyncStore.getState().init()
+    })()
   }, [loadFromDB])
 
   useEffect(() => {
