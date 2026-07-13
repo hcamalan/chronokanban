@@ -9,7 +9,7 @@
  *    https://hcamalan.github.io and http://localhost:5173 for local dev.
  * 5. Paste the resulting Client ID below. It is not a secret and is safe to commit.
  */
-export const GOOGLE_CLIENT_ID = ''
+export const GOOGLE_CLIENT_ID = '230209780222-6nl3cd98o6ari86a5ppok2skkag6e270.apps.googleusercontent.com'
 
 export const GOOGLE_DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file'
 
