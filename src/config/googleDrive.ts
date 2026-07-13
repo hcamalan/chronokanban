@@ -19,7 +19,7 @@
  */
 export const GOOGLE_CLIENT_ID = '230209780222-6nl3cd98o6ari86a5ppok2skkag6e270.apps.googleusercontent.com'
 
-export const GOOGLE_API_KEY = ''
+export const GOOGLE_API_KEY = 'AIzaSyDsAP1C1OFvgPNjlVF0W7AzpHoD5t8MC2M'
 
 export const GOOGLE_DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file'
 
