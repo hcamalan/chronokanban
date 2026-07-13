@@ -5,17 +5,20 @@ const FILE_ID_KEY = 'driveFileId'
 const LAST_SYNCED_AT_KEY = 'driveLastSyncedAt'
 const WAS_CONNECTED_KEY = 'driveWasConnected'
 
-export async function getDriveIds(): Promise<{ folderId: string; fileId: string | null } | undefined> {
+/** `folderId` is null for a file joined via Picker (see `connectExisting`) — only ever needed to create a brand-new file. */
+export async function getDriveIds(): Promise<{ folderId: string | null; fileId: string } | undefined> {
   const db = await getDB()
-  const folderId = (await db.get('appSettings', FOLDER_ID_KEY)) as string | undefined
-  if (!folderId) return undefined
   const fileId = (await db.get('appSettings', FILE_ID_KEY)) as string | undefined
-  return { folderId, fileId: fileId ?? null }
+  if (!fileId) return undefined
+  const folderId = (await db.get('appSettings', FOLDER_ID_KEY)) as string | undefined
+  return { folderId: folderId ?? null, fileId }
 }
 
-export async function saveDriveIds(folderId: string, fileId: string): Promise<void> {
+export async function saveDriveIds(folderId: string | null, fileId: string): Promise<void> {
   const db = await getDB()
-  await db.put('appSettings', folderId, FOLDER_ID_KEY)
+  if (folderId) {
+    await db.put('appSettings', folderId, FOLDER_ID_KEY)
+  }
   await db.put('appSettings', fileId, FILE_ID_KEY)
 }
 

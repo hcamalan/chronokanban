@@ -1,4 +1,5 @@
 import { useGoogleDriveSyncStore } from '../../store/useGoogleDriveSyncStore'
+import { isGooglePickerConfigured } from '../../config/googleDrive'
 
 interface GoogleDriveSyncPanelProps {
   onClose: () => void
@@ -8,7 +9,9 @@ export function GoogleDriveSyncPanel({ onClose }: GoogleDriveSyncPanelProps) {
   const status = useGoogleDriveSyncStore((s) => s.status)
   const lastSyncedAt = useGoogleDriveSyncStore((s) => s.lastSyncedAt)
   const newerVersionAvailable = useGoogleDriveSyncStore((s) => s.newerVersionAvailable)
-  const connect = useGoogleDriveSyncStore((s) => s.connect)
+  const pickerError = useGoogleDriveSyncStore((s) => s.pickerError)
+  const connectNew = useGoogleDriveSyncStore((s) => s.connectNew)
+  const connectExisting = useGoogleDriveSyncStore((s) => s.connectExisting)
   const reconnect = useGoogleDriveSyncStore((s) => s.reconnect)
   const pullLatest = useGoogleDriveSyncStore((s) => s.pullLatest)
   const disconnect = useGoogleDriveSyncStore((s) => s.disconnect)
@@ -21,10 +24,10 @@ export function GoogleDriveSyncPanel({ onClose }: GoogleDriveSyncPanelProps) {
       >
         <h3 className="mb-1 text-sm font-medium text-gray-900 dark:text-gray-100">Google Drive sync</h3>
         <p className="mb-3 text-xs text-gray-500 dark:text-gray-400">
-          Keeps a file in a "ChronoKanban" folder in your Google Drive automatically up to date, so opening
-          ChronoKanban on another computer picks up your latest data. Same newest-wins behavior as Auto-sync
-          folder, just backed by Drive instead of a local folder — connecting one disconnects the other.
-          Re-authentication ~hourly is usually silent, but occasionally needs one click.
+          Keeps a file in your Google Drive automatically up to date, so opening ChronoKanban on another computer
+          picks up your latest data. Same newest-wins behavior as Auto-sync folder, just backed by Drive instead
+          of a local folder — connecting one disconnects the other. Re-authentication ~hourly is usually silent,
+          but occasionally needs one click.
         </p>
 
         {status === 'notConfigured' && (
@@ -37,11 +40,27 @@ export function GoogleDriveSyncPanel({ onClose }: GoogleDriveSyncPanelProps) {
           <div className="flex flex-col gap-2">
             <p className="text-sm text-gray-700 dark:text-gray-200">Not connected.</p>
             <button
-              onClick={() => void connect()}
+              onClick={() => void connectNew()}
               className="rounded bg-gray-900 px-3 py-1.5 text-sm text-white hover:bg-gray-700 dark:bg-gray-100 dark:text-gray-900"
             >
-              Connect Google Drive
+              Create new sync file
             </button>
+            {isGooglePickerConfigured && (
+              <>
+                <button
+                  onClick={() => void connectExisting()}
+                  className="rounded border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
+                >
+                  Open a shared file…
+                </button>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  For joining a file a teammate already shared with you (Editor access) from Drive. This is a
+                  full-replace sync with no merge — if you and a teammate both edit around the same time, whoever
+                  syncs last overwrites the other's changes.
+                </p>
+              </>
+            )}
+            {pickerError && <p className="text-xs text-red-600 dark:text-red-400">{pickerError}</p>}
           </div>
         )}
 
@@ -88,6 +107,23 @@ export function GoogleDriveSyncPanel({ onClose }: GoogleDriveSyncPanelProps) {
               >
                 Reconnect
               </button>
+              <button
+                onClick={() => void disconnect()}
+                className="rounded border border-gray-300 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:border-gray-600 dark:text-red-400 dark:hover:bg-red-950"
+              >
+                Disconnect
+              </button>
+            </div>
+          </div>
+        )}
+
+        {status === 'file-unavailable' && (
+          <div className="flex flex-col gap-2">
+            <p className="text-sm text-gray-700 dark:text-gray-200">
+              The synced file is no longer accessible — it may have been deleted, or your access to it may have
+              been removed. Reconnecting won't fix this; disconnect and set sync up again if needed.
+            </p>
+            <div className="mt-1 flex gap-2">
               <button
                 onClick={() => void disconnect()}
                 className="rounded border border-gray-300 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:border-gray-600 dark:text-red-400 dark:hover:bg-red-950"

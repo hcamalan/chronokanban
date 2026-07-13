@@ -10,7 +10,9 @@ import {
   getFileModifiedTime,
   downloadFileContent,
   writeFileContent,
+  isFileGoneError,
 } from '../db/googleDriveApi'
+import { openPicker } from '../db/googleDrivePicker'
 import {
   getDriveIds,
   saveDriveIds,
@@ -20,18 +22,25 @@ import {
   getDriveWasConnected,
   setDriveWasConnected,
 } from '../db/googleDriveStorage'
-import { isGoogleDriveConfigured } from '../config/googleDrive'
+import { isGoogleDriveConfigured, isGooglePickerConfigured } from '../config/googleDrive'
 
 const POLL_INTERVAL_MS = 2 * 60 * 1000
 
-export type GoogleDriveSyncStatus = 'notConfigured' | 'unconfigured' | 'connected' | 'needs-reconnect'
+export type GoogleDriveSyncStatus =
+  | 'notConfigured'
+  | 'unconfigured'
+  | 'connected'
+  | 'needs-reconnect'
+  | 'file-unavailable'
 
 interface GoogleDriveSyncState {
   status: GoogleDriveSyncStatus
   lastSyncedAt: string | null
   newerVersionAvailable: boolean
+  pickerError: string | null
   init: () => Promise<void>
-  connect: () => Promise<void>
+  connectNew: () => Promise<void>
+  connectExisting: () => Promise<void>
   reconnect: () => Promise<void>
   pullLatest: () => Promise<void>
   disconnect: () => Promise<void>
@@ -45,7 +54,7 @@ let pollIntervalId: ReturnType<typeof setInterval> | null = null
 
 /** Background/automatic push — never shows an interactive popup, since it can fire mid-edit. */
 async function pushSnapshot() {
-  if (!folderId) return
+  if (!folderId && !fileId) return
   let token: string
   try {
     token = await getAccessToken({ silent: true })
@@ -53,13 +62,20 @@ async function pushSnapshot() {
     useGoogleDriveSyncStore.setState({ status: 'needs-reconnect' })
     return
   }
-  const data = await buildExportFile()
-  const result = await writeFileContent(token, folderId, fileId, JSON.stringify(data, null, 2))
-  fileId = result.id
-  await saveDriveIds(folderId, fileId)
-  await setDriveLastSyncedAt(result.modifiedTime)
-  hasUnpushedChanges = false
-  useGoogleDriveSyncStore.setState({ lastSyncedAt: result.modifiedTime, newerVersionAvailable: false })
+  try {
+    const data = await buildExportFile()
+    const result = await writeFileContent(token, folderId, fileId, JSON.stringify(data, null, 2))
+    fileId = result.id
+    await saveDriveIds(folderId, fileId)
+    await setDriveLastSyncedAt(result.modifiedTime)
+    hasUnpushedChanges = false
+    useGoogleDriveSyncStore.setState({ lastSyncedAt: result.modifiedTime, newerVersionAvailable: false })
+  } catch (err) {
+    if (isFileGoneError(err)) {
+      stopPolling()
+      useGoogleDriveSyncStore.setState({ status: 'file-unavailable' })
+    }
+  }
 }
 
 const debouncedPush = createDebouncer<true>(() => {
@@ -132,8 +148,12 @@ async function poll() {
     } else {
       await pullSnapshot(token, currentModifiedTime)
     }
-  } catch {
-    // Transient failure — next poll retries; an explicit action will surface needs-reconnect if truly stale.
+  } catch (err) {
+    if (isFileGoneError(err)) {
+      stopPolling()
+      useGoogleDriveSyncStore.setState({ status: 'file-unavailable' })
+    }
+    // Otherwise a transient failure — next poll retries; an explicit action will surface needs-reconnect if truly stale.
   }
 }
 
@@ -151,6 +171,7 @@ export const useGoogleDriveSyncStore = create<GoogleDriveSyncState>((set) => ({
   status: isGoogleDriveConfigured ? 'unconfigured' : 'notConfigured',
   lastSyncedAt: null,
   newerVersionAvailable: false,
+  pickerError: null,
 
   init: async () => {
     if (!isGoogleDriveConfigured) return
@@ -165,45 +186,84 @@ export const useGoogleDriveSyncStore = create<GoogleDriveSyncState>((set) => ({
 
     try {
       const token = await getAccessToken({ silent: true })
-      if (!folderId) folderId = await findOrCreateFolder(token)
-      if (!fileId) fileId = await findSyncFile(token, folderId)
+      if (!fileId) {
+        // Shouldn't normally happen (wasConnected implies ids were already saved) — fall back safely.
+        if (!folderId) folderId = await findOrCreateFolder(token)
+        fileId = await findSyncFile(token, folderId)
+      }
       await syncOnConnect(token)
       await finishConnecting()
-    } catch {
-      set({ status: 'needs-reconnect' })
+    } catch (err) {
+      set({ status: isFileGoneError(err) ? 'file-unavailable' : 'needs-reconnect' })
     }
   },
 
-  connect: async () => {
+  /** Creates (or reuses) the app's own "ChronoKanban" folder + file. */
+  connectNew: async () => {
     if (!isGoogleDriveConfigured) return
     if (useAutoSyncStore.getState().status === 'connected') {
       await useAutoSyncStore.getState().disconnect()
     }
     const token = await getAccessToken({ silent: false })
-    if (!folderId) folderId = await findOrCreateFolder(token)
-    if (fileId === null) fileId = await findSyncFile(token, folderId)
+    folderId = await findOrCreateFolder(token)
+    fileId = await findSyncFile(token, folderId)
+    await syncOnConnect(token)
+    await finishConnecting()
+  },
+
+  /** Joins a file a teammate shared with you, picked via Google Picker — no folder needed, only ever updates it. */
+  connectExisting: async () => {
+    if (!isGoogleDriveConfigured || !isGooglePickerConfigured) return
+    if (useAutoSyncStore.getState().status === 'connected') {
+      await useAutoSyncStore.getState().disconnect()
+    }
+    const token = await getAccessToken({ silent: false })
+    const picked = await openPicker(token)
+    if (!picked) return // cancelled
+
+    set({ pickerError: null })
+    try {
+      const text = await downloadFileContent(token, picked.fileId)
+      const file = new File([text], picked.fileName, { type: 'application/json' })
+      await parseImportFile(file) // validation only — throws if this isn't a real ChronoKanban export
+    } catch {
+      set({ pickerError: `"${picked.fileName}" doesn't look like a ChronoKanban sync file. Try picking again.` })
+      return
+    }
+
+    folderId = null
+    fileId = picked.fileId
     await syncOnConnect(token)
     await finishConnecting()
   },
 
   reconnect: async () => {
-    const token = await getAccessToken({ silent: false })
-    if (!folderId) folderId = await findOrCreateFolder(token)
-    if (fileId === null) fileId = await findSyncFile(token, folderId)
-    await syncOnConnect(token)
-    await finishConnecting()
+    try {
+      const token = await getAccessToken({ silent: false })
+      await syncOnConnect(token)
+      await finishConnecting()
+    } catch (err) {
+      set({ status: isFileGoneError(err) ? 'file-unavailable' : 'needs-reconnect' })
+    }
   },
 
   pullLatest: async () => {
     if (!fileId) return
-    let token: string
     try {
-      token = await getAccessToken({ silent: true })
-    } catch {
-      token = await getAccessToken({ silent: false })
+      let token: string
+      try {
+        token = await getAccessToken({ silent: true })
+      } catch {
+        token = await getAccessToken({ silent: false })
+      }
+      const modifiedTime = await getFileModifiedTime(token, fileId)
+      await pullSnapshot(token, modifiedTime)
+    } catch (err) {
+      if (isFileGoneError(err)) {
+        stopPolling()
+        set({ status: 'file-unavailable' })
+      }
     }
-    const modifiedTime = await getFileModifiedTime(token, fileId)
-    await pullSnapshot(token, modifiedTime)
   },
 
   disconnect: async () => {
@@ -216,6 +276,6 @@ export const useGoogleDriveSyncStore = create<GoogleDriveSyncState>((set) => ({
     clearAccessToken()
     await clearDriveIds()
     await setDriveWasConnected(false)
-    set({ status: 'unconfigured', lastSyncedAt: null, newerVersionAvailable: false })
+    set({ status: 'unconfigured', lastSyncedAt: null, newerVersionAvailable: false, pickerError: null })
   },
 }))

@@ -3,6 +3,15 @@ const FILE_NAME = 'chronokanban-sync.json'
 const API_BASE = 'https://www.googleapis.com/drive/v3'
 const UPLOAD_BASE = 'https://www.googleapis.com/upload/drive/v3'
 
+/** Carries the HTTP status so callers can tell "file deleted / access revoked" (404/403) apart from other failures. */
+export class DriveApiError extends Error {
+  status: number
+  constructor(status: number, message: string) {
+    super(message)
+    this.status = status
+  }
+}
+
 async function driveFetch(url: string, token: string, init?: RequestInit): Promise<Response> {
   const res = await fetch(url, {
     ...init,
@@ -10,9 +19,14 @@ async function driveFetch(url: string, token: string, init?: RequestInit): Promi
   })
   if (!res.ok) {
     const text = await res.text().catch(() => '')
-    throw new Error(`Drive API error ${res.status}: ${text}`)
+    throw new DriveApiError(res.status, `Drive API error ${res.status}: ${text}`)
   }
   return res
+}
+
+/** True for "the file is gone or you no longer have access to it" — reconnecting won't fix this. */
+export function isFileGoneError(err: unknown): boolean {
+  return err instanceof DriveApiError && (err.status === 404 || err.status === 403)
 }
 
 /** Finds the app's "ChronoKanban" folder in Drive, creating it if it doesn't exist yet. */
@@ -60,7 +74,7 @@ export async function downloadFileContent(token: string, fileId: string): Promis
  */
 export async function writeFileContent(
   token: string,
-  folderId: string,
+  folderId: string | null,
   fileId: string | null,
   json: string,
 ): Promise<{ id: string; modifiedTime: string }> {
@@ -71,6 +85,9 @@ export async function writeFileContent(
       body: json,
     })
     return (await res.json()) as { id: string; modifiedTime: string }
+  }
+  if (!folderId) {
+    throw new Error('Cannot create a new sync file without a destination folder')
   }
 
   const boundary = 'chronokanban-sync-boundary'
