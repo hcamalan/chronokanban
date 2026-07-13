@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useStore } from './store/useStore'
 import { useAutoSyncStore } from './store/useAutoSyncStore'
+import { useGoogleDriveSyncStore } from './store/useGoogleDriveSyncStore'
 import { useNotificationWatcher } from './hooks/useNotificationWatcher'
 import { ensureInitialGracePeriod } from './store/backupStorage'
 import { TopNav } from './components/layout/TopNav'
 import { HowToView } from './components/layout/HowToView'
+import { GoogleDriveSyncBanner } from './components/layout/GoogleDriveSyncBanner'
 import { Footer } from './components/layout/Footer'
 import { UndoToast } from './components/layout/UndoToast'
 import { BoardListView } from './components/boards/BoardListView'
@@ -35,6 +37,7 @@ function App() {
       await loadFromDB()
       ensureInitialGracePeriod()
       await useAutoSyncStore.getState().init()
+      await useGoogleDriveSyncStore.getState().init()
     })()
   }, [loadFromDB])
 
@@ -156,6 +159,7 @@ function App() {
         hotkeysOpen={hotkeysOpen}
         onHotkeysOpenChange={setHotkeysOpen}
       />
+      <GoogleDriveSyncBanner />
       <div className="flex-1">
         {view.kind === 'boards' && (
           <BoardListView onOpenBoard={(boardId) => setView({ kind: 'board', boardId })} />

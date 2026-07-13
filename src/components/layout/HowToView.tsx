@@ -267,6 +267,16 @@ export function HowToView() {
           "Reconnect" click before it resumes.
         </p>
         <p>
+          <strong>Settings → Google Drive sync</strong> works the same way but through a "ChronoKanban" folder in
+          your Google Drive instead of a local folder - the point being it works across different computers, not
+          just different browser profiles on the same machine. Connecting one of Auto-sync folder or Google Drive
+          sync disconnects the other, since only one can be the active source of truth at a time. An open, idle
+          tab checks Drive for changes every couple of minutes; if it finds something newer and this tab has no
+          unsynced changes of its own, it pulls it in automatically, otherwise it shows a banner asking you to
+          pull manually rather than risk overwriting what you were doing. Google's sign-in only lasts about an
+          hour at a time, and re-signing in is usually silent but occasionally needs a click.
+        </p>
+        <p>
           The first time you use ChronoKanban, a one-time banner also nudges you to back up early - export once
           or dismiss it and it won't show again.
         </p>

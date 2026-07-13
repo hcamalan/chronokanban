@@ -5,7 +5,9 @@ import { ConfirmDialog } from '../boards/ConfirmDialog'
 import { ImportConflictDialog } from '../boards/ImportConflictDialog'
 import { FieldsPanel } from './FieldsPanel'
 import { AutoSyncPanel } from './AutoSyncPanel'
-import { isAutoSyncSupported } from '../../store/useAutoSyncStore'
+import { isAutoSyncSupported, useAutoSyncStore } from '../../store/useAutoSyncStore'
+import { GoogleDriveSyncPanel } from './GoogleDriveSyncPanel'
+import { useGoogleDriveSyncStore } from '../../store/useGoogleDriveSyncStore'
 import { BUCKET_WIDTH_OPTIONS } from '../../utils/bucketWidth'
 import { requestNotificationPermission } from '../../utils/notifications'
 import {
@@ -49,6 +51,7 @@ export function SettingsPanel({ onDataDeleted }: SettingsPanelProps) {
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [fieldsOpen, setFieldsOpen] = useState(false)
   const [autoSyncOpen, setAutoSyncOpen] = useState(false)
+  const [googleDriveOpen, setGoogleDriveOpen] = useState(false)
   const [importFlow, setImportFlow] = useState<ImportFlow | null>(null)
   const ref = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -57,6 +60,8 @@ export function SettingsPanel({ onDataDeleted }: SettingsPanelProps) {
   const deleteAllData = useStore((s) => s.deleteAllData)
   const exportData = useStore((s) => s.exportData)
   const loadFromDB = useStore((s) => s.loadFromDB)
+  const autoSyncStatus = useAutoSyncStore((s) => s.status)
+  const googleDriveStatus = useGoogleDriveSyncStore((s) => s.status)
 
   useEffect(() => {
     if (!open) return
@@ -234,7 +239,7 @@ export function SettingsPanel({ onDataDeleted }: SettingsPanelProps) {
           </div>
 
           <div className="mt-3 border-t border-gray-200 pt-3 dark:border-gray-700">
-            {isAutoSyncSupported ? (
+            {isAutoSyncSupported && googleDriveStatus !== 'connected' ? (
               <button
                 onClick={() => {
                   setOpen(false)
@@ -247,10 +252,40 @@ export function SettingsPanel({ onDataDeleted }: SettingsPanelProps) {
               </button>
             ) : (
               <span
-                title="Needs a Chromium browser's File System Access support — not available in Firefox, Safari, or Brave (which disables it by default for privacy reasons)."
+                title={
+                  googleDriveStatus === 'connected'
+                    ? 'Disconnect Google Drive sync first — only one sync provider can be active at a time.'
+                    : "Needs a Chromium browser's File System Access support — not available in Firefox, Safari, or Brave (which disables it by default for privacy reasons)."
+                }
                 className="block w-full cursor-not-allowed rounded px-1 py-1 text-left text-sm text-gray-400 dark:text-gray-500"
               >
                 Auto-sync folder…
+              </span>
+            )}
+          </div>
+
+          <div className="mt-3 border-t border-gray-200 pt-3 dark:border-gray-700">
+            {autoSyncStatus !== 'connected' && googleDriveStatus !== 'notConfigured' ? (
+              <button
+                onClick={() => {
+                  setOpen(false)
+                  setGoogleDriveOpen(true)
+                }}
+                title="Automatically keeps a file in a folder in your Google Drive in sync with your data — so opening ChronoKanban on another computer picks up your latest boards."
+                className="w-full rounded px-1 py-1 text-left text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
+              >
+                Google Drive sync…
+              </button>
+            ) : (
+              <span
+                title={
+                  autoSyncStatus === 'connected'
+                    ? 'Disconnect Auto-sync folder first — only one sync provider can be active at a time.'
+                    : 'Not set up yet — needs a Google Cloud OAuth Client ID configured in the app first.'
+                }
+                className="block w-full cursor-not-allowed rounded px-1 py-1 text-left text-sm text-gray-400 dark:text-gray-500"
+              >
+                Google Drive sync…
               </span>
             )}
           </div>
@@ -292,6 +327,8 @@ export function SettingsPanel({ onDataDeleted }: SettingsPanelProps) {
       {fieldsOpen && <FieldsPanel onClose={() => setFieldsOpen(false)} />}
 
       {autoSyncOpen && <AutoSyncPanel onClose={() => setAutoSyncOpen(false)} />}
+
+      {googleDriveOpen && <GoogleDriveSyncPanel onClose={() => setGoogleDriveOpen(false)} />}
 
       {confirmingDelete && (
         <ConfirmDialog
