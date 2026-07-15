@@ -32,8 +32,8 @@ export function HowToView() {
 
       <p className="mb-6">
         ChronoKanban is the task tracking tool you didn't know you needed. It's a Kanban board with built-in time
-        tracking, analytics dashboards, and a calendar view - running entirely in your browser, with no account,
-        no server, and nothing ever sent anywhere.
+        tracking, analytics dashboards, and a calendar view - running entirely in your browser, with no account
+        and no server. Your boards and tasks never leave your browser unless you explicitly turn on a sync option.
       </p>
 
       <p className="mb-6">
@@ -301,10 +301,15 @@ export function HowToView() {
 
       <Chapter title="Working offline">
         <p>
-          ChronoKanban makes no network calls of any kind - all your data lives in this browser's local storage.
-          Once you've loaded it here, it keeps working with no internet connection at all, and it can be installed
-          like an app - ChronoKanban offers a one-time install prompt (or, on iPhone/iPad, instructions for adding
-          it to your home screen), or you can always do it manually from your browser's menu.
+          By default, ChronoKanban makes no network calls at all - all your data lives in this browser's local
+          storage. Once you've loaded it here, it keeps working with no internet connection at all, and it can be
+          installed like an app - ChronoKanban offers a one-time install prompt (or, on iPhone/iPad, instructions
+          for adding it to your home screen), or you can always do it manually from your browser's menu.
+        </p>
+        <p>
+          The only network activity in the app, ever, is something you explicitly turn on (Auto-sync folder or
+          Google Drive sync), or a small anonymous, cookieless page-view counter used to see whether the app is
+          getting any use at all - no personal data, no cookies, and it never touches your boards or tasks.
         </p>
         <p>
           To run it on a machine with no internet access whatsoever, download the source, run{' '}
