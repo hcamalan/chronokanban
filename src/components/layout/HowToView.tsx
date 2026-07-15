@@ -267,9 +267,12 @@ export function HowToView() {
           "Reconnect" click before it resumes.
         </p>
         <p>
-          <strong>Settings → Google Drive sync</strong> works the same way but through a "ChronoKanban" folder in
-          your Google Drive instead of a local folder - the point being it works across different computers, not
-          just different browser profiles on the same machine. Connecting one of Auto-sync folder or Google Drive
+          <strong>Settings → Google Drive sync (beta)</strong> works the same way but through a "ChronoKanban"
+          folder in your Google Drive instead of a local folder - the point being it works across different
+          computers, not just different browser profiles on the same machine. It's in limited beta for now:
+          it's still going through Google's app-verification process, so it only works for Google accounts that
+          have been granted access, and other accounts will see an "app isn't verified" screen from Google when
+          they try to connect. Connecting one of Auto-sync folder or Google Drive
           sync disconnects the other, since only one can be the active source of truth at a time. An open, idle
           tab checks Drive for changes every couple of minutes; if it finds something newer and this tab has no
           unsynced changes of its own, it pulls it in automatically, otherwise it shows a banner asking you to

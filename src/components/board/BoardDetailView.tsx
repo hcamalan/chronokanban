@@ -44,6 +44,7 @@ export function BoardDetailView({ boardId, onBack, onOpenTask }: BoardDetailView
   const tasks = useStore((s) => s.tasks)
   const renameBoard = useStore((s) => s.renameBoard)
   const addBucket = useStore((s) => s.addBucket)
+  const setPendingEditBucketId = useStore((s) => s.setPendingEditBucketId)
   const addTaskAtTop = useStore((s) => s.addTaskAtTop)
   const moveTask = useStore((s) => s.moveTask)
   const completeTask = useStore((s) => s.completeTask)
@@ -241,7 +242,7 @@ export function BoardDetailView({ boardId, onBack, onOpenTask }: BoardDetailView
             {selectMode ? 'Cancel' : 'Select'}
           </button>
           <button
-            onClick={() => addBucket(boardId, 'New bucket')}
+            onClick={() => setPendingEditBucketId(addBucket(boardId, 'New bucket'))}
             className="rounded bg-gray-900 px-3 py-1.5 text-sm text-white hover:bg-gray-700 dark:bg-gray-100 dark:text-gray-900"
           >
             Add bucket

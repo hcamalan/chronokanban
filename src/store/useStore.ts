@@ -32,9 +32,12 @@ interface AppState {
   loaded: boolean
   preferences: Preferences
   pendingDeletion: PendingDeletion | null
+  // Transient signal: a freshly-created bucket whose name field should auto-open + scroll into view.
+  pendingEditBucketId: string | null
 
   loadFromDB: () => Promise<void>
   setPreference: <K extends keyof Preferences>(key: K, value: Preferences[K]) => void
+  setPendingEditBucketId: (id: string | null) => void
   undoDelete: () => void
 
   addBoard: (name: string) => string
@@ -92,12 +95,14 @@ export const useStore = create<AppState>((set, get) => {
   loaded: false,
   preferences: loadPreferences(),
   pendingDeletion: null,
+  pendingEditBucketId: null,
 
   setPreference: (key, value) => {
     const preferences = { ...get().preferences, [key]: value }
     set({ preferences })
     savePreferences(preferences)
   },
+  setPendingEditBucketId: (id) => set({ pendingEditBucketId: id }),
   undoDelete: () => {
     const pending = get().pendingDeletion
     if (!pending) return

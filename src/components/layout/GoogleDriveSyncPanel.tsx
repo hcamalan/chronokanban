@@ -22,12 +22,19 @@ export function GoogleDriveSyncPanel({ onClose }: GoogleDriveSyncPanelProps) {
         className="w-full max-w-sm rounded-lg bg-white p-5 shadow-xl dark:bg-gray-800"
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 className="mb-1 text-sm font-medium text-gray-900 dark:text-gray-100">Google Drive sync</h3>
+        <h3 className="mb-1 text-sm font-medium text-gray-900 dark:text-gray-100">
+          Google Drive sync <span className="text-amber-600 dark:text-amber-400">(beta)</span>
+        </h3>
         <p className="mb-3 text-xs text-gray-500 dark:text-gray-400">
           Keeps a file in your Google Drive automatically up to date, so opening ChronoKanban on another computer
           picks up your latest data. Same newest-wins behavior as Auto-sync folder, just backed by Drive instead
           of a local folder — connecting one disconnects the other. Re-authentication ~hourly is usually silent,
           but occasionally needs one click.
+        </p>
+        <p className="mb-3 rounded border border-amber-200 bg-amber-50 px-2 py-1.5 text-xs text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
+          Limited beta: this is still going through Google's app-verification process, so for now it only works
+          for Google accounts that have been granted access. If Google shows you an "app isn't verified" screen
+          when connecting, that's why — it isn't available to everyone yet.
         </p>
 
         {status === 'notConfigured' && (

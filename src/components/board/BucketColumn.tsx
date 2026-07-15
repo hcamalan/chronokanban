@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable'
@@ -59,12 +59,15 @@ export function BucketColumn({
   const deleteBucket = useStore((s) => s.deleteBucket)
   const addTask = useStore((s) => s.addTask)
   const bucketWidth = useStore((s) => s.preferences.bucketWidth)
+  const isPendingEdit = useStore((s) => s.pendingEditBucketId === bucket.id)
+  const setPendingEditBucketId = useStore((s) => s.setPendingEditBucketId)
   const isDesktop = useMediaQuery('(min-width: 768px)')
   const [editingName, setEditingName] = useState(false)
   const [name, setName] = useState(bucket.name)
   const [newTaskName, setNewTaskName] = useState('')
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const { setNodeRef: setDroppableRef, isOver } = useDroppable({ id: bucket.id })
+  const columnElRef = useRef<HTMLDivElement | null>(null)
 
   const taskCount = activeTasks.length + completedTasks.length
   function handleDeleteClick() {
@@ -80,9 +83,20 @@ export function BucketColumn({
     isDragging,
   } = useSortable({ id: bucketSortableId(bucket.id) })
 
+  // A freshly-created "New bucket" opens its name field, scrolls into view, and consumes the signal.
+  useEffect(() => {
+    if (!isPendingEdit) return
+    setEditingName(true)
+    columnElRef.current?.scrollIntoView({ behavior: 'smooth', inline: 'nearest', block: 'nearest' })
+    setPendingEditBucketId(null)
+  }, [isPendingEdit, setPendingEditBucketId])
+
   return (
     <div
-      ref={setSortableRef}
+      ref={(node) => {
+        setSortableRef(node)
+        columnElRef.current = node
+      }}
       style={{
         transform: CSS.Transform.toString(transform),
         transition: transition ?? undefined,
@@ -99,6 +113,7 @@ export function BucketColumn({
           <input
             autoFocus
             value={name}
+            onFocus={(e) => e.currentTarget.select()}
             onChange={(e) => setName(e.target.value)}
             onBlur={() => {
               setEditingName(false)

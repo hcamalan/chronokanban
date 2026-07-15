@@ -1,18 +1,23 @@
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { useStore } from './store/useStore'
 import { useAutoSyncStore } from './store/useAutoSyncStore'
 import { useGoogleDriveSyncStore } from './store/useGoogleDriveSyncStore'
 import { useNotificationWatcher } from './hooks/useNotificationWatcher'
 import { ensureInitialGracePeriod } from './store/backupStorage'
 import { TopNav } from './components/layout/TopNav'
-import { HowToView } from './components/layout/HowToView'
 import { GoogleDriveSyncBanner } from './components/layout/GoogleDriveSyncBanner'
 import { Footer } from './components/layout/Footer'
 import { UndoToast } from './components/layout/UndoToast'
 import { BoardListView } from './components/boards/BoardListView'
 import { BoardDetailView } from './components/board/BoardDetailView'
-import { DashboardView } from './components/dashboard/DashboardView'
 import { TodayView } from './components/today/TodayView'
+
+// Split out the two heaviest/least-frequently-opened views. The dashboard in particular pulls in
+// recharts + html-to-image, the bulk of the bundle, which most sessions never open.
+const DashboardView = lazy(() =>
+  import('./components/dashboard/DashboardView').then((m) => ({ default: m.DashboardView })),
+)
+const HowToView = lazy(() => import('./components/layout/HowToView').then((m) => ({ default: m.HowToView })))
 import { TaskDetailModal } from './components/task/TaskDetailModal'
 
 type View =
@@ -92,7 +97,8 @@ function App() {
 
       if (e.shiftKey && e.key.toLowerCase() === 'k') {
         if (view.kind === 'board') {
-          useStore.getState().addBucket(view.boardId, 'New bucket')
+          const id = useStore.getState().addBucket(view.boardId, 'New bucket')
+          useStore.getState().setPendingEditBucketId(id)
         }
         return
       }
@@ -161,21 +167,23 @@ function App() {
       />
       <GoogleDriveSyncBanner />
       <div className="flex-1">
-        {view.kind === 'boards' && (
-          <BoardListView onOpenBoard={(boardId) => setView({ kind: 'board', boardId })} />
-        )}
-        {view.kind === 'board' && (
-          <BoardDetailView
-            boardId={view.boardId}
-            onBack={() => setView({ kind: 'boards' })}
-            onOpenTask={(taskId) => setSelectedTaskId(taskId)}
-          />
-        )}
-        {view.kind === 'today' && <TodayView onOpenTask={(taskId) => setSelectedTaskId(taskId)} />}
-        {view.kind === 'dashboard' && (
-          <DashboardView onOpenTask={(taskId) => setSelectedTaskId(taskId)} />
-        )}
-        {view.kind === 'howto' && <HowToView />}
+        <Suspense fallback={<div className="p-6 text-gray-500 dark:text-gray-400">Loading…</div>}>
+          {view.kind === 'boards' && (
+            <BoardListView onOpenBoard={(boardId) => setView({ kind: 'board', boardId })} />
+          )}
+          {view.kind === 'board' && (
+            <BoardDetailView
+              boardId={view.boardId}
+              onBack={() => setView({ kind: 'boards' })}
+              onOpenTask={(taskId) => setSelectedTaskId(taskId)}
+            />
+          )}
+          {view.kind === 'today' && <TodayView onOpenTask={(taskId) => setSelectedTaskId(taskId)} />}
+          {view.kind === 'dashboard' && (
+            <DashboardView onOpenTask={(taskId) => setSelectedTaskId(taskId)} />
+          )}
+          {view.kind === 'howto' && <HowToView />}
+        </Suspense>
       </div>
       <Footer />
       {selectedTaskId && (
